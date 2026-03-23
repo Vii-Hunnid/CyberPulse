@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx create-next-app@latest . --typescript --tailwind --app --no-src-dir --no-import-alias --eslint)",
+      "Bash(npx create-next-app@latest . --typescript --tailwind --app --no-src-dir --no-import-alias --eslint --yes)",
+      "Read(//c/tmp/**)",
+      "Bash(npx create-next-app@latest cyberpulse --typescript --tailwind --app --no-src-dir --no-import-alias --eslint --yes)",
+      "Bash(ls /c/Users/Syspro4/CyberPulse/app/\\\\\\(public\\\\\\)/)",
+      "Bash(ls /c/Users/Syspro4/CyberPulse/app/\\\\\\(public\\\\\\)/scan/)",
+      "Bash(npx prisma:*)",
+      "Bash(npx tsc:*)",
+      "Bash(psql -U postgres -c \"SELECT version\\(\\);\")",
+      "Bash(psql -U postgres --no-password -c \"SELECT version\\(\\);\")",
+      "Bash(tasklist)",
+      "Bash(reg query:*)",
+      "Bash(cmd /c \"reg query HKLM\\\\SOFTWARE\\\\PostgreSQL\\\\Installations /s\")",
+      "Bash(cmd /c \"psql -U postgres -c \"\"SELECT current_user;\"\"\")",
+      "Bash(cmd /c \"pg_config --sysconfdir\")",
+      "Bash(cmd /c \"pg_config --bindir\")",
+      "Bash(node -e \"const r = require\\(''''./node_modules/@react-pdf/renderer''''\\); console.log\\(Object.keys\\(r\\).filter\\(k => k.includes\\(''''render''''\\) || k.includes\\(''''Buffer''''\\)\\)\\)\")",
+      "WebFetch(domain:scca-black.vercel.app)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(gh repo:*)"
+    ]
+  }
+}
