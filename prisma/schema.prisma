@@ -1,0 +1,161 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String         @id @default(cuid())
+  email        String         @unique
+  passwordHash String
+  name         String
+  company      String?
+  role         Role           @default(CLIENT)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  organisations Organisation[]
+  freeScans     FreeScan[]
+}
+
+model Organisation {
+  id                String                 @id @default(cuid())
+  name              String
+  domain            String
+  industry          String?
+  country           String?
+  encryptedMetadata String?
+  integrityRoot     String?
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+  userId            String
+  user              User                   @relation(fields: [userId], references: [id])
+  scans             Scan[]
+  alerts            Alert[]
+  attestations      InsuranceAttestation[]
+}
+
+model Scan {
+  id                 String               @id @default(cuid())
+  organisationId     String
+  triggeredBy        TriggerType          @default(MANUAL)
+  status             ScanStatus           @default(PENDING)
+  overallScore       Int?
+  grade              String?
+  rawResults         Json?
+  integrityRoot      String?
+  aiNarrative        String?
+  aiUnderwritingScore Int?
+  darkWebExposures   Int?
+  createdAt          DateTime             @default(now())
+  completedAt        DateTime?
+  organisation       Organisation         @relation(fields: [organisationId], references: [id])
+  findings           ScanFinding[]
+  attestations       InsuranceAttestation[]
+}
+
+model ScanFinding {
+  id          String         @id @default(cuid())
+  scanId      String
+  category    FindingCategory
+  title       String
+  description String         @db.Text
+  severity    Severity
+  remediation String?        @db.Text
+  status      FindingStatus  @default(OPEN)
+  resolvedAt  DateTime?
+  createdAt   DateTime       @default(now())
+  scan        Scan           @relation(fields: [scanId], references: [id])
+  alerts      Alert[]
+}
+
+model Alert {
+  id            String       @id @default(cuid())
+  organisationId String
+  scanFindingId  String?
+  type          AlertType
+  message       String       @db.Text
+  read          Boolean      @default(false)
+  sentAt        DateTime     @default(now())
+  organisation  Organisation @relation(fields: [organisationId], references: [id])
+  scanFinding   ScanFinding? @relation(fields: [scanFindingId], references: [id])
+}
+
+model InsuranceAttestation {
+  id               String       @id @default(cuid())
+  organisationId   String
+  scanId           String
+  attestationPdf   String?
+  underwritingScore Int
+  generatedAt      DateTime     @default(now())
+  validUntil       DateTime
+  organisation     Organisation @relation(fields: [organisationId], references: [id])
+  scan             Scan         @relation(fields: [scanId], references: [id])
+}
+
+model FreeScan {
+  id              String    @id @default(cuid())
+  domain          String
+  ipAddress       String
+  teaserPayload   Json?
+  email           String?
+  claimedByUserId String?
+  createdAt       DateTime  @default(now())
+  expiresAt       DateTime
+  claimedBy       User?     @relation(fields: [claimedByUserId], references: [id])
+}
+
+enum Role {
+  ADMIN
+  CLIENT
+}
+
+enum TriggerType {
+  MANUAL
+  SCHEDULED
+  API
+}
+
+enum ScanStatus {
+  PENDING
+  RUNNING
+  COMPLETE
+  FAILED
+}
+
+enum Severity {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+  INFO
+}
+
+enum FindingCategory {
+  DNS_EMAIL
+  SSL_TLS
+  HTTP_HEADERS
+  OPEN_PORTS
+  DARK_WEB
+  CVE_EXPOSURE
+  BACKUP_HYGIENE
+  ACCESS_CONTROLS
+}
+
+enum FindingStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+enum AlertType {
+  POSTURE_DEGRADED
+  BREACH_DETECTED
+  CERTIFICATE_EXPIRY
+  RECHECK_DUE
+}
