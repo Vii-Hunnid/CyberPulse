@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { Mail, Lock, Shield, EyeOff, Radio, Bug } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'CyberPulse — Free Cyber Security Scanner for SA Businesses',
@@ -14,12 +15,12 @@ export const metadata: Metadata = {
 };
 
 const CHECK_CARDS = [
-  { icon: '✉', title: 'Email Security', desc: 'SPF, DKIM, and DMARC protection against spoofing' },
-  { icon: '🔒', title: 'SSL Certificate Health', desc: 'Certificate validity, expiry, and TLS version checks' },
-  { icon: '🛡', title: 'Website Security Headers', desc: 'CSP, HSTS, X-Frame-Options, and more' },
-  { icon: '🌑', title: 'Dark Web Exposure', desc: 'Known breach data linked to your domain' },
-  { icon: '⚡', title: 'Open Port Risks', desc: 'Dangerously exposed services like RDP, Telnet, databases' },
-  { icon: '🔍', title: 'Known Vulnerabilities', desc: 'CVE database lookup for detected software versions' },
+  { Icon: Mail,   title: 'Email Security',           desc: 'SPF, DKIM, and DMARC protection against spoofing' },
+  { Icon: Lock,   title: 'SSL Certificate Health',   desc: 'Certificate validity, expiry, and TLS version checks' },
+  { Icon: Shield, title: 'Website Security Headers', desc: 'CSP, HSTS, X-Frame-Options, and more' },
+  { Icon: EyeOff, title: 'Dark Web Exposure',        desc: 'Known breach data linked to your domain' },
+  { Icon: Radio,  title: 'Open Port Risks',          desc: 'Dangerously exposed services like RDP, Telnet, databases' },
+  { Icon: Bug,    title: 'Known Vulnerabilities',    desc: 'CVE database lookup for detected software versions' },
 ];
 
 const STATS = [
@@ -107,12 +108,14 @@ export default function HomePage() {
           Six critical security categories scanned instantly
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
-          {CHECK_CARDS.map((card) => (
-            <div key={card.title} className="check-card"
+          {CHECK_CARDS.map(({ Icon, title, desc }) => (
+            <div key={title} className="check-card"
               style={{ background: '#0f1729', border: '1px solid #1a2540', borderRadius: 12, padding: 28, cursor: 'default' }}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>{card.icon}</div>
-              <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 8 }}>{card.title}</h3>
-              <p style={{ color: '#8892a4', fontSize: 14, lineHeight: 1.6 }}>{card.desc}</p>
+              <div style={{ marginBottom: 14 }}>
+                <Icon size={28} color="#00d4ff" strokeWidth={1.5} />
+              </div>
+              <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 8 }}>{title}</h3>
+              <p style={{ color: '#8892a4', fontSize: 14, lineHeight: 1.6 }}>{desc}</p>
             </div>
           ))}
         </div>
@@ -150,15 +153,16 @@ export default function HomePage() {
                 <span style={{ marginLeft: 12, fontSize: 14, fontWeight: 500 }}>{f.title}</span>
               </div>
             ))}
+            {/* Blurred locked section */}
             <div style={{ position: 'relative', marginTop: 16, borderRadius: 8, overflow: 'hidden' }}>
               <div style={{ filter: 'blur(4px)', opacity: 0.4, padding: 16, background: '#141d30', borderRadius: 8 }}>
                 <div style={{ height: 48, background: '#1a2540', borderRadius: 4, marginBottom: 8 }} />
                 <div style={{ height: 48, background: '#1a2540', borderRadius: 4, marginBottom: 8 }} />
                 <div style={{ height: 48, background: '#1a2540', borderRadius: 4 }} />
               </div>
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(10,15,30,0.85)', borderRadius: 8 }}>
-                <div style={{ fontSize: 24, marginBottom: 8 }}>🔒</div>
-                <p style={{ fontSize: 14, color: '#fff', marginBottom: 16, textAlign: 'center' }}>
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(10,15,30,0.85)', borderRadius: 8, gap: 12 }}>
+                <Lock size={28} color="#00d4ff" strokeWidth={1.5} />
+                <p style={{ fontSize: 14, color: '#fff', textAlign: 'center', margin: 0 }}>
                   Create a free account to unlock full report,<br />dark web analysis, and insurance readiness score
                 </p>
                 <Link href="/register" style={{ background: '#00d4ff', color: '#0a0f1e', fontWeight: 700, padding: '10px 24px', borderRadius: 6, textDecoration: 'none' }}>

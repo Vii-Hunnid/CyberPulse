@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { CheckCircle2, AlertTriangle } from 'lucide-react';
 
 interface Breach {
   source: string;
@@ -65,14 +66,14 @@ export default function DarkWebPage() {
         <div>
           {breaches.length === 0 ? (
             <div className="rounded-xl p-8 text-center" style={{ background: '#0d2e1a', border: '1px solid #00ff8833' }}>
-              <div className="text-4xl mb-4">✓</div>
+              <div className="flex justify-center mb-4"><CheckCircle2 size={40} color="#00ff88" strokeWidth={1.5} /></div>
               <p className="text-lg font-semibold" style={{ color: '#00ff88' }}>No breaches found</p>
               <p className="mt-2 text-sm" style={{ color: '#8892a4' }}>This email address has not appeared in known data breaches.</p>
             </div>
           ) : (
             <div>
               <div className="rounded-xl p-4 mb-6 flex items-center gap-4" style={{ background: '#2d0f1a', border: '1px solid #ff336633' }}>
-                <span className="text-2xl">⚠</span>
+                <AlertTriangle size={22} color="#ff3366" strokeWidth={1.5} style={{ flexShrink: 0 }} />
                 <p style={{ color: '#ff3366' }}>{breaches.length} breach{breaches.length > 1 ? 'es' : ''} detected for this email address</p>
               </div>
 

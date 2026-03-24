@@ -2,6 +2,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import Link from 'next/link';
+import { AlertTriangle } from 'lucide-react';
 
 function ScoreRing({ score }: { score: number }) {
   const color = score >= 75 ? '#00ff88' : score >= 50 ? '#f5c518' : '#ff3366';
@@ -86,7 +87,7 @@ export default async function DashboardPage() {
           <div className="space-y-3">
             {org.alerts.map((alert) => (
               <div key={alert.id} className="flex items-start gap-3 p-3 rounded" style={{ background: '#141d30' }}>
-                <span style={{ color: '#ff6b35' }}>⚠</span>
+                <AlertTriangle size={16} color="#ff6b35" strokeWidth={1.5} style={{ flexShrink: 0, marginTop: 2 }} />
                 <div>
                   <p className="text-sm text-white">{alert.message}</p>
                   <p className="text-xs mt-1" style={{ color: '#8892a4' }}>{new Date(alert.sentAt).toLocaleString('en-ZA')}</p>

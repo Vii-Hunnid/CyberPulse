@@ -1,6 +1,7 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import { CheckCircle2, XCircle } from 'lucide-react';
 
 export default async function UnderwritingPage() {
   const session = await getServerSession(authOptions);
@@ -89,7 +90,7 @@ export default async function UnderwritingPage() {
               <ul className="space-y-2">
                 {uw.keyRiskFactors?.map((f, i) => (
                   <li key={i} className="text-sm flex items-start gap-2" style={{ color: '#c8d0dd' }}>
-                    <span style={{ color: '#ff6b35' }}>•</span> {f}
+                    <XCircle size={14} color="#ff6b35" strokeWidth={1.5} style={{ flexShrink: 0, marginTop: 2 }} /> {f}
                   </li>
                 ))}
               </ul>
@@ -99,7 +100,7 @@ export default async function UnderwritingPage() {
               <ul className="space-y-2">
                 {uw.positiveFactors?.map((f, i) => (
                   <li key={i} className="text-sm flex items-start gap-2" style={{ color: '#c8d0dd' }}>
-                    <span style={{ color: '#00ff88' }}>✓</span> {f}
+                    <CheckCircle2 size={14} color="#00ff88" strokeWidth={1.5} style={{ flexShrink: 0, marginTop: 2 }} /> {f}
                   </li>
                 ))}
               </ul>

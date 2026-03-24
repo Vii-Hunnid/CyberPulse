@@ -7,6 +7,10 @@ import {
   Text,
   View,
   Image,
+  Svg,
+  Path,
+  Circle,
+  Rect,
   StyleSheet,
   renderToBuffer,
 } from '@react-pdf/renderer';
@@ -173,7 +177,7 @@ const s = StyleSheet.create({
     marginBottom: 4,
     paddingLeft: 4,
   },
-  bulletDot: { fontSize: 10, color: C.cyan, width: 10 },
+  bulletDot: { width: 10 },
   bulletText: { fontSize: 10, color: C.textMid, flex: 1, lineHeight: 1.6 },
 
   // Category grid
@@ -237,8 +241,7 @@ const s = StyleSheet.create({
     marginBottom: 20,
     alignItems: 'center',
   },
-  lockedIcon:  { fontSize: 22, marginBottom: 6 },
-  lockedTitle: { fontSize: 11, fontWeight: 'bold', color: C.textMuted, marginBottom: 4 },
+  lockedTitle:{ fontSize: 11, fontWeight: 'bold', color: C.textMuted, marginBottom: 4 },
   lockedDesc:  { fontSize: 9, color: C.grey, textAlign: 'center', maxWidth: 280 },
 
   // Insurance readiness
@@ -285,6 +288,50 @@ const s = StyleSheet.create({
   footerText: { fontSize: 8, color: '#64748b' },
   footerBrand:{ fontSize: 8, color: '#94a3b8', fontWeight: 'bold' },
 });
+
+// ─── Inline SVG icons for PDF ─────────────────────────────────────────────────
+function SvgCheck({ color = '#16a34a', size = 12 }: { color?: string; size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <Path d="M20 6L9 17l-5-5" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    </Svg>
+  );
+}
+
+function SvgWarn({ color = '#d97706', size = 12 }: { color?: string; size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <Path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke={color} strokeWidth="2" fill="none" strokeLinejoin="round" />
+      <Path d="M12 9v4M12 17h.01" stroke={color} strokeWidth="2" strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+function SvgX({ color = '#dc2626', size = 12 }: { color?: string; size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <Circle cx="12" cy="12" r="10" stroke={color} strokeWidth="2" fill="none" />
+      <Path d="M15 9l-6 6M9 9l6 6" stroke={color} strokeWidth="2" strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+function SvgLock({ color = '#64748b', size = 28 }: { color?: string; size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <Rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke={color} strokeWidth="1.8" fill="none" />
+      <Path d="M7 11V7a5 5 0 0110 0v4" stroke={color} strokeWidth="1.8" strokeLinecap="round" fill="none" />
+    </Svg>
+  );
+}
+
+function SvgBullet({ color = '#0ea5e9', size = 6 }: { color?: string; size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 6 6">
+      <Circle cx="3" cy="3" r="2.5" fill={color} />
+    </Svg>
+  );
+}
 
 // ─── Narrative parser ────────────────────────────────────────────────────────
 type NarrativeNode =
@@ -397,8 +444,8 @@ function MiniReport({ data, logoPath }: { data: ReportPayload; logoPath: string 
                   }
                   if (node.type === 'bullet') {
                     return (
-                      <View key={i} style={s.narrativeBullet}>
-                        <Text style={s.bulletDot}>•</Text>
+                      <View key={i} style={[s.narrativeBullet, { alignItems: 'flex-start', paddingTop: 3 }]}>
+                        <View style={{ marginTop: 4 }}><SvgBullet color={C.cyan} size={5} /></View>
                         <Text style={s.bulletText}>{node.text}</Text>
                       </View>
                     );
@@ -414,9 +461,16 @@ function MiniReport({ data, logoPath }: { data: ReportPayload; logoPath: string 
           <View style={s.catGrid}>
             {data.categoryResults.map((c) => (
               <View key={c.category} style={[s.catCard, { borderTop: `3px solid ${statusColor(c.status)}` }]}>
-                <Text style={[s.catStatus, { color: statusColor(c.status) }]}>
-                  {c.status === 'pass' ? '✓ PASS' : c.status === 'warn' ? '⚠ WARN' : '✗ FAIL'}
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 3 }}>
+                  {c.status === 'pass'
+                    ? <SvgCheck color={statusColor('pass')} size={10} />
+                    : c.status === 'warn'
+                    ? <SvgWarn color={statusColor('warn')} size={10} />
+                    : <SvgX color={statusColor('fail')} size={10} />}
+                  <Text style={[s.catStatus, { color: statusColor(c.status) }]}>
+                    {c.status === 'pass' ? 'PASS' : c.status === 'warn' ? 'WARN' : 'FAIL'}
+                  </Text>
+                </View>
                 <Text style={s.catName}>{CATEGORY_LABELS[c.category] ?? c.category}</Text>
                 <Text style={s.catSummary}>{c.summary}</Text>
               </View>
@@ -445,9 +499,10 @@ function MiniReport({ data, logoPath }: { data: ReportPayload; logoPath: string 
                 <Text style={s.findingTitle}>{f.title}</Text>
               </View>
             ))}
-            <View style={s.findingsFooter}>
+            <View style={[s.findingsFooter, { flexDirection: 'row', alignItems: 'center', gap: 6 }]}>
+              <SvgLock color={C.grey} size={10} />
               <Text style={s.lockNote}>
-                🔒  Full remediation steps, CVE details and fix guides are available in your free account dashboard.
+                Full remediation steps, CVE details and fix guides are available in your free account dashboard.
               </Text>
             </View>
           </View>
@@ -455,7 +510,9 @@ function MiniReport({ data, logoPath }: { data: ReportPayload; logoPath: string 
           {/* Dark Web — LOCKED */}
           <Text style={s.sectionTitle}>Dark Web Exposure</Text>
           <View style={s.lockedCard}>
-            <Text style={s.lockedIcon}>🔒</Text>
+            <View style={{ alignItems: 'center', marginBottom: 8 }}>
+              <SvgLock color={C.grey} size={28} />
+            </View>
             <Text style={s.lockedTitle}>Dark Web Data Available in Full Report</Text>
             <Text style={s.lockedDesc}>
               Your full report includes a complete dark web breach scan — showing any exposed email addresses,
@@ -483,7 +540,10 @@ function MiniReport({ data, logoPath }: { data: ReportPayload; logoPath: string 
                 'Downloadable PDF attestation for insurers',
                 'Continuous monitoring & instant alerts',
               ].map((item) => (
-                <Text key={item} style={s.ctaItem}>✓  {item}</Text>
+                <View key={item} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <SvgCheck color="#0ea5e9" size={9} />
+                  <Text style={s.ctaItem}>{item}</Text>
+                </View>
               ))}
             </View>
             <Text style={s.ctaUrl}>cyberpulse.co.za</Text>

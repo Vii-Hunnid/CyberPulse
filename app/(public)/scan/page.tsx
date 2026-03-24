@@ -3,6 +3,10 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import {
+  CheckCircle2, AlertTriangle, XCircle, Loader2,
+  Download, Lock,
+} from 'lucide-react';
 
 interface CategoryResult {
   category: string;
@@ -41,10 +45,10 @@ const SEVERITY_COLORS: Record<string, string> = {
 };
 
 function StatusIcon({ status }: { status: 'pass' | 'warn' | 'fail' | 'scanning' }) {
-  if (status === 'scanning') return <span style={{ color: '#8892a4' }}>◌</span>;
-  if (status === 'pass') return <span style={{ color: '#00ff88' }}>✓</span>;
-  if (status === 'warn') return <span style={{ color: '#f5c518' }}>⚠</span>;
-  return <span style={{ color: '#ff3366' }}>✗</span>;
+  if (status === 'scanning') return <Loader2 size={16} color="#8892a4" style={{ animation: 'spin 1s linear infinite' }} />;
+  if (status === 'pass') return <CheckCircle2 size={16} color="#00ff88" />;
+  if (status === 'warn') return <AlertTriangle size={16} color="#f5c518" />;
+  return <XCircle size={16} color="#ff3366" />;
 }
 
 function GradeColor(grade: string): string {
@@ -221,6 +225,7 @@ export default function FreeScanPage() {
   if (step === 'input') {
     return (
       <div style={{ minHeight: '100vh', background: '#0a0f1e', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         <div style={{ maxWidth: 560, width: '100%', textAlign: 'center' }}>
           <h1 style={{ fontSize: 32, fontWeight: 800, marginBottom: 8, color: '#fff' }}>Free Security Scan</h1>
           <p style={{ color: '#8892a4', marginBottom: 32 }}>Enter your business domain to start</p>
@@ -364,7 +369,9 @@ export default function FreeScanPage() {
 
         {/* Dark Web — Locked */}
         <div style={{ background: '#0f1729', border: '1.5px dashed #1a2540', borderRadius: 12, padding: 24, marginBottom: 24, textAlign: 'center' }}>
-          <div style={{ fontSize: 28, marginBottom: 8 }}>🔒</div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}>
+            <Lock size={26} color="#00d4ff" strokeWidth={1.5} />
+          </div>
           <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 6 }}>Dark Web Monitoring</div>
           <p style={{ color: '#8892a4', fontSize: 13, maxWidth: 420, margin: '0 auto' }}>
             See if your domain, emails, or credentials have appeared on hacker forums or data breach dumps.
@@ -397,7 +404,9 @@ export default function FreeScanPage() {
               fontWeight: 600, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8,
             }}
           >
-            {pdfLoading ? '⏳ Generating...' : '⬇ Download Mini Report (PDF)'}
+            {pdfLoading
+              ? <><Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} /> Generating...</>
+              : <><Download size={15} /> Download Mini Report (PDF)</>}
           </button>
         </div>
 
