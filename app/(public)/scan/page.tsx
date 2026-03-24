@@ -362,17 +362,14 @@ export default function FreeScanPage() {
           <p style={{ fontSize: 12, color: '#8892a4', marginTop: 12 }}>Create a free account to unlock full remediation steps</p>
         </div>
 
-        {/* Dark Web Teaser */}
-        <div style={{
-          background: result.darkWebBreachCount > 0 ? '#2d0f1a' : '#0d2e1a',
-          border: `1px solid ${result.darkWebBreachCount > 0 ? '#ff336633' : '#00ff8833'}`,
-          borderRadius: 12, padding: 20, marginBottom: 24,
-        }}>
-          <span style={{ fontSize: 16, marginRight: 10 }}>{result.darkWebBreachCount > 0 ? '⚠' : '✓'}</span>
-          <strong>Dark Web: </strong>
-          {result.darkWebBreachCount > 0
-            ? `${result.darkWebBreachCount} breach${result.darkWebBreachCount > 1 ? 'es' : ''} detected linked to your domain`
-            : 'No breaches found — your domain looks clean'}
+        {/* Dark Web — Locked */}
+        <div style={{ background: '#0f1729', border: '1.5px dashed #1a2540', borderRadius: 12, padding: 24, marginBottom: 24, textAlign: 'center' }}>
+          <div style={{ fontSize: 28, marginBottom: 8 }}>🔒</div>
+          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 6 }}>Dark Web Monitoring</div>
+          <p style={{ color: '#8892a4', fontSize: 13, maxWidth: 420, margin: '0 auto' }}>
+            See if your domain, emails, or credentials have appeared on hacker forums or data breach dumps.
+            Available in your full report.
+          </p>
         </div>
 
         {/* Underwriting Teaser */}
