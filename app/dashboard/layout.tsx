@@ -1,5 +1,4 @@
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getSessionOrDev } from '@/lib/dev-session';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { Shield, LogOut } from 'lucide-react';
@@ -7,31 +6,31 @@ import { Providers } from '@/app/providers';
 import { NavLinks } from './nav-links';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const session = await getServerSession(authOptions);
+  const session = await getSessionOrDev();
   if (!session) redirect('/login');
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', background: '#0a0f1e', fontFamily: 'system-ui, sans-serif' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', background: '#f0f4f8', fontFamily: "'Inter', system-ui, sans-serif" }}>
 
-      {/* ─── Sidebar ────────────────────────────────────────────────────── */}
+      {/* ─── Sidebar ─────────────────────────────────────────────────────── */}
       <aside style={{
         width: 220,
         flexShrink: 0,
         display: 'flex',
         flexDirection: 'column',
-        background: '#0c1222',
-        borderRight: '1px solid #1a2540',
+        background: '#0c1220',
+        borderRight: '1px solid #1e2d45',
       }}>
 
         {/* Brand */}
-        <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid #1a2540' }}>
-          <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
-            <div style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(0,212,255,0.08)', border: '1.5px solid rgba(0,212,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Shield size={14} color="#00d4ff" strokeWidth={1.5} />
+        <div style={{ padding: '20px 18px 16px', borderBottom: '1px solid #1e2d45' }}>
+          <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 9, textDecoration: 'none' }}>
+            <div style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(14,165,233,.1)', border: '1.5px solid rgba(14,165,233,.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Shield size={13} color="#00d4ff" strokeWidth={1.5} />
             </div>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#00d4ff', lineHeight: 1.2 }}>CyberPulse</div>
-              <div style={{ fontSize: 10, color: '#3d4f6b', lineHeight: 1 }}>Posture Intelligence</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#f8fafc', lineHeight: 1.2, fontFamily: 'ui-monospace, monospace' }}>CyberPulse</div>
+              <div style={{ fontSize: 9, color: '#334155', lineHeight: 1, fontFamily: 'ui-monospace, monospace', letterSpacing: .5 }}>POSTURE INTEL</div>
             </div>
           </Link>
         </div>
@@ -40,21 +39,21 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <NavLinks />
 
         {/* User info */}
-        <div style={{ padding: '12px 16px', borderTop: '1px solid #1a2540' }}>
-          <div style={{ fontSize: 11, color: '#3d4f6b', marginBottom: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <div style={{ padding: '12px 18px', borderTop: '1px solid #1e2d45' }}>
+          <div style={{ fontSize: 11, color: '#475569', marginBottom: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'ui-monospace, monospace' }}>
             {session.user.email}
           </div>
           <Link
             href="/api/auth/signout"
-            style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#ff6b35', fontSize: 12, textDecoration: 'none' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#ef4444', fontSize: 12, textDecoration: 'none' }}
           >
-            <LogOut size={12} strokeWidth={1.5} />
-            Sign out
+            <LogOut size={11} strokeWidth={1.5} />
+            <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, letterSpacing: .5 }}>SIGN OUT</span>
           </Link>
         </div>
       </aside>
 
-      {/* ─── Main content ─────────────────────────────────────────────── */}
+      {/* ─── Main ─────────────────────────────────────────────────────────── */}
       <main style={{ flex: 1, overflow: 'auto' }}>
         <Providers>{children}</Providers>
       </main>

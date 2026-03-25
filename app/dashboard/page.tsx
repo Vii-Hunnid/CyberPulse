@@ -1,164 +1,172 @@
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getSessionOrDev } from '@/lib/dev-session';
 import { prisma } from '@/lib/db';
 import Link from 'next/link';
 import { AlertTriangle, ArrowRight, Activity, ShieldAlert, CheckCircle2, RefreshCw } from 'lucide-react';
 
-function ScoreRing({ score }: { score: number }) {
-  const color = score >= 75 ? '#00ff88' : score >= 50 ? '#f5c518' : '#ff3366';
+function gradeColor(g?: string | null) {
+  switch (g) {
+    case 'A': return '#10b981';
+    case 'B': return '#0ea5e9';
+    case 'C': return '#f59e0b';
+    case 'D': return '#f97316';
+    default:  return '#ef4444';
+  }
+}
+
+function ScoreRing({ score, grade }: { score: number; grade?: string | null }) {
+  const color = gradeColor(grade);
   return (
-    <div style={{ width: 120, height: 120, borderRadius: '50%', border: `4px solid ${color}`, background: '#0a0f1e', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+    <div style={{ width: 112, height: 112, borderRadius: '50%', border: `4px solid ${color}`, background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: 38, fontWeight: 800, color, lineHeight: 1 }}>{score}</div>
-        <div style={{ fontSize: 11, color: '#8892a4', marginTop: 2 }}>/ 100</div>
+        <div style={{ fontSize: 32, fontWeight: 800, color, lineHeight: 1, fontFamily: 'ui-monospace, monospace' }}>{score}</div>
+        <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 2 }}>/ 100</div>
       </div>
     </div>
   );
 }
 
 export default async function DashboardPage() {
-  const session = await getServerSession(authOptions);
+  const session = await getSessionOrDev();
 
-  const org = await prisma.organisation.findFirst({
-    where: { userId: session!.user.id },
-    include: {
-      scans: {
-        orderBy: { createdAt: 'desc' },
-        take: 1,
-        include: { findings: true },
+  let org = null;
+  let dbError = false;
+  try {
+    org = await prisma.organisation.findFirst({
+      where: { userId: session?.user.id ?? '' },
+      include: {
+        scans: { orderBy: { createdAt: 'desc' }, take: 1, include: { findings: true } },
+        alerts: { where: { read: false }, orderBy: { sentAt: 'desc' }, take: 5 },
       },
-      alerts: { where: { read: false }, orderBy: { sentAt: 'desc' }, take: 5 },
-    },
-  });
+    });
+  } catch {
+    dbError = true;
+  }
 
-  const latestScan = org?.scans[0];
-  const criticalCount = latestScan?.findings.filter((f) => f.severity === 'CRITICAL').length ?? 0;
-  const highCount = latestScan?.findings.filter((f) => f.severity === 'HIGH').length ?? 0;
-  const resolvedCount = latestScan?.findings.filter((f) => f.status === 'RESOLVED').length ?? 0;
-  const totalFindings = latestScan?.findings.length ?? 0;
-
-  const gradeColor = (g?: string | null) => {
-    switch (g) {
-      case 'A': return '#00ff88';
-      case 'B': return '#00d4ff';
-      case 'C': return '#f5c518';
-      case 'D': return '#ff6b35';
-      default:  return '#ff3366';
-    }
-  };
+  const latestScan  = org?.scans[0];
+  const critical    = latestScan?.findings.filter((f) => f.severity === 'CRITICAL').length ?? 0;
+  const high        = latestScan?.findings.filter((f) => f.severity === 'HIGH').length ?? 0;
+  const resolved    = latestScan?.findings.filter((f) => f.status === 'RESOLVED').length ?? 0;
+  const total       = latestScan?.findings.length ?? 0;
+  const gCol        = gradeColor(latestScan?.grade);
 
   return (
-    <div style={{ padding: 32, fontFamily: 'system-ui, sans-serif' }}>
+    <div style={{ padding: 28, fontFamily: "'Inter', system-ui, sans-serif" }}>
+      <style>{`.mono { font-family: ui-monospace, 'SF Mono', Menlo, monospace; }`}</style>
 
-      {/* ─── Header ─────────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 32, gap: 16 }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, gap: 16 }}>
         <div>
-          <h2 style={{ fontSize: 22, fontWeight: 700, color: '#ffffff', marginBottom: 3 }}>
-            {org?.name ?? 'Your Organisation'}
-          </h2>
-          <p style={{ color: '#3d4f6b', fontSize: 13 }}>{org?.domain ?? 'No domain configured'}</p>
+          <div className="mono" style={{ fontSize: 10, color: '#94a3b8', letterSpacing: 1.5, marginBottom: 4 }}>[ DASHBOARD ]</div>
+          <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 2 }}>{org?.name ?? 'Your Organisation'}</h2>
+          <p style={{ color: '#94a3b8', fontSize: 13, fontFamily: 'ui-monospace, monospace' }}>{org?.domain ?? '—'}</p>
         </div>
         {org && (
-          <Link
-            href="/api/scan/start"
-            style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 20px', background: '#00d4ff', color: '#0a0f1e', fontWeight: 700, fontSize: 13, borderRadius: 8, textDecoration: 'none', flexShrink: 0 }}
-          >
+          <Link href="/api/scan/start" style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 18px', background: '#0ea5e9', color: '#fff', fontWeight: 700, fontSize: 12, borderRadius: 7, textDecoration: 'none', flexShrink: 0, fontFamily: 'ui-monospace, monospace', letterSpacing: .5 }}>
             <RefreshCw size={13} strokeWidth={2.5} />
-            New Scan
+            NEW SCAN /&gt;
           </Link>
         )}
       </div>
 
-      {/* ─── Score card ─────────────────────────────────────────────────── */}
-      <div style={{ background: '#0f1729', borderRadius: 14, padding: '28px 28px', border: '1px solid #1a2540', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 28 }}>
-        <ScoreRing score={latestScan?.overallScore ?? 0} />
+      {/* Score card */}
+      <div style={{ background: '#ffffff', borderRadius: 12, padding: '24px 24px', border: '1px solid #dde3ec', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 24, boxShadow: '0 2px 12px rgba(0,0,0,.04)' }}>
+        <ScoreRing score={latestScan?.overallScore ?? 0} grade={latestScan?.grade} />
         <div style={{ flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 6 }}>
-            <span style={{ fontSize: 40, fontWeight: 800, color: '#ffffff', lineHeight: 1, letterSpacing: '-1px' }}>
-              Grade
-            </span>
-            <span style={{ fontSize: 40, fontWeight: 800, lineHeight: 1, color: gradeColor(latestScan?.grade), letterSpacing: '-1px' }}>
-              {latestScan?.grade ?? '—'}
-            </span>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
+            <span style={{ fontSize: 34, fontWeight: 800, color: '#0f172a', lineHeight: 1, letterSpacing: '-1px' }}>Grade</span>
+            <span style={{ fontSize: 34, fontWeight: 800, color: gCol, lineHeight: 1, letterSpacing: '-1px' }}>{latestScan?.grade ?? '—'}</span>
           </div>
-          <p style={{ fontSize: 12, color: '#3d4f6b', marginBottom: 20 }}>
+          <p className="mono" style={{ fontSize: 11, color: '#94a3b8', marginBottom: 18, letterSpacing: '.5px' }}>
             {latestScan?.completedAt
-              ? `Last scanned ${new Date(latestScan.completedAt).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' })}`
-              : 'No scan completed yet'}
+              ? `// SCANNED ${new Date(latestScan.completedAt).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' }).toUpperCase()}`
+              : '// NO SCAN COMPLETED YET'}
           </p>
-          <div style={{ display: 'flex', gap: 24 }}>
+          <div style={{ display: 'flex', gap: 28, flexWrap: 'wrap' }}>
             {[
-              { label: 'Total Findings', value: totalFindings, color: '#fff' },
-              { label: 'Critical',       value: criticalCount,  color: '#ff3366' },
-              { label: 'High',           value: highCount,      color: '#ff6b35' },
-              { label: 'Resolved',       value: resolvedCount,  color: '#00ff88' },
+              { label: 'Total', value: total,    color: '#334155' },
+              { label: 'Critical', value: critical, color: '#ef4444' },
+              { label: 'High',     value: high,     color: '#f97316' },
+              { label: 'Resolved', value: resolved,  color: '#10b981' },
             ].map(({ label, value, color }) => (
               <div key={label}>
-                <div style={{ fontSize: 24, fontWeight: 700, color, lineHeight: 1 }}>{value}</div>
-                <div style={{ fontSize: 11, color: '#3d4f6b', marginTop: 4 }}>{label}</div>
+                <div className="mono" style={{ fontSize: 22, fontWeight: 800, color, lineHeight: 1 }}>{value}</div>
+                <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 3 }}>{label}</div>
               </div>
             ))}
           </div>
         </div>
 
         {latestScan && (
-          <Link
-            href={`/dashboard/scan/${latestScan.id}`}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', background: 'rgba(0,212,255,0.06)', border: '1px solid rgba(0,212,255,0.15)', color: '#00d4ff', fontSize: 13, fontWeight: 600, borderRadius: 8, textDecoration: 'none', flexShrink: 0 }}
-          >
-            View Report <ArrowRight size={13} strokeWidth={2.5} />
+          <Link href={`/dashboard/scan/${latestScan.id}`} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', background: '#f0f4f8', border: '1px solid #dde3ec', color: '#0ea5e9', fontSize: 12, fontWeight: 600, borderRadius: 7, textDecoration: 'none', flexShrink: 0, fontFamily: 'ui-monospace, monospace', letterSpacing: .5 }}>
+            VIEW REPORT <ArrowRight size={12} strokeWidth={2.5} />
           </Link>
         )}
       </div>
 
-      {/* ─── Quick metrics ──────────────────────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
+      {/* Metric tiles */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 16 }}>
         {[
-          { label: 'Open Findings',      value: totalFindings - resolvedCount, Icon: ShieldAlert, color: '#ff6b35' },
-          { label: 'Resolved',           value: resolvedCount,                 Icon: CheckCircle2, color: '#00ff88' },
-          { label: 'Active Alerts',      value: org?.alerts.length ?? 0,       Icon: Activity,    color: '#f5c518' },
-        ].map(({ label, value, Icon, color }) => (
-          <div key={label} style={{ background: '#0f1729', borderRadius: 10, padding: '18px 20px', border: '1px solid #1a2540', display: 'flex', alignItems: 'center', gap: 14 }}>
-            <div style={{ width: 38, height: 38, borderRadius: 9, background: `${color}10`, border: `1px solid ${color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          { label: 'Open Findings', value: total - resolved, Icon: ShieldAlert, color: '#f97316', bg: '#fff7ed', border: '#fed7aa' },
+          { label: 'Resolved',      value: resolved,          Icon: CheckCircle2, color: '#10b981', bg: '#f0fdf4', border: '#bbf7d0' },
+          { label: 'Active Alerts', value: org?.alerts.length ?? 0, Icon: Activity, color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
+        ].map(({ label, value, Icon, color, bg, border }) => (
+          <div key={label} style={{ background: '#ffffff', borderRadius: 10, padding: '18px 20px', border: '1px solid #dde3ec', display: 'flex', alignItems: 'center', gap: 14, boxShadow: '0 2px 8px rgba(0,0,0,.03)' }}>
+            <div style={{ width: 38, height: 38, borderRadius: 9, background: bg, border: `1px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <Icon size={17} color={color} strokeWidth={1.5} />
             </div>
             <div>
-              <div style={{ fontSize: 22, fontWeight: 700, color: '#fff', lineHeight: 1 }}>{value}</div>
-              <div style={{ fontSize: 11, color: '#3d4f6b', marginTop: 3 }}>{label}</div>
+              <div className="mono" style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', lineHeight: 1 }}>{value}</div>
+              <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 3 }}>{label}</div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* ─── Recent alerts ──────────────────────────────────────────────── */}
+      {/* Alerts */}
       {org?.alerts && org.alerts.length > 0 && (
-        <div style={{ background: '#0f1729', borderRadius: 12, border: '1px solid #1a2540', overflow: 'hidden' }}>
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid #1a2540', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <AlertTriangle size={14} color="#f5c518" strokeWidth={1.5} />
-            <h3 style={{ fontSize: 14, fontWeight: 600, color: '#ffffff' }}>Recent Alerts</h3>
+        <div style={{ background: '#ffffff', borderRadius: 12, border: '1px solid #dde3ec', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,.03)' }}>
+          <div style={{ padding: '14px 20px', borderBottom: '1px solid #dde3ec', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <AlertTriangle size={13} color="#f59e0b" strokeWidth={1.5} />
+            <h3 style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>Recent Alerts</h3>
           </div>
-          <div>
-            {org.alerts.map((alert, i) => (
-              <div key={alert.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '14px 20px', borderBottom: i < org.alerts.length - 1 ? '1px solid #1a2540' : 'none' }}>
-                <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#ff6b35', marginTop: 5, flexShrink: 0 }} />
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: 13, color: '#e2e8f0', marginBottom: 3 }}>{alert.message}</p>
-                  <p style={{ fontSize: 11, color: '#3d4f6b' }}>{new Date(alert.sentAt).toLocaleString('en-ZA')}</p>
-                </div>
+          {org.alerts.map((alert, i) => (
+            <div key={alert.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '13px 20px', borderBottom: i < org.alerts.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
+              <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#f97316', marginTop: 6, flexShrink: 0 }} />
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: 13, color: '#334155', marginBottom: 2 }}>{alert.message}</p>
+                <p className="mono" style={{ fontSize: 10, color: '#94a3b8', letterSpacing: .5 }}>{new Date(alert.sentAt).toLocaleString('en-ZA')}</p>
               </div>
-            ))}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* DB connection error */}
+      {dbError && (
+        <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 12, padding: '20px 24px', marginBottom: 16, display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+          <AlertTriangle size={18} color="#ef4444" strokeWidth={1.5} style={{ flexShrink: 0, marginTop: 1 }} />
+          <div>
+            <p style={{ fontSize: 14, fontWeight: 700, color: '#dc2626', marginBottom: 6 }}>Database not connected</p>
+            <p style={{ fontSize: 13, color: '#7f1d1d', lineHeight: 1.6, marginBottom: 10 }}>
+              CyberPulse cannot reach PostgreSQL. The credentials in <code style={{ background: '#fee2e2', padding: '1px 5px', borderRadius: 3, fontSize: 12 }}>.env.local</code> are wrong.
+            </p>
+            <p className="mono" style={{ fontSize: 11, color: '#991b1b', marginBottom: 4 }}>Current: DATABASE_URL=postgresql://postgres:password@localhost:5432/cyberpulse</p>
+            <p style={{ fontSize: 13, color: '#7f1d1d', lineHeight: 1.7 }}>
+              <strong>To fix:</strong> Open <strong>pgAdmin 4</strong> (installed with PostgreSQL) → right-click the postgres server → Properties → change the password to <code style={{ background: '#fee2e2', padding: '1px 5px', borderRadius: 3 }}>password</code>.
+              Then run <code style={{ background: '#fee2e2', padding: '1px 5px', borderRadius: 3 }}>npx prisma db push</code> to create the tables.
+            </p>
           </div>
         </div>
       )}
 
-      {/* ─── Empty state ────────────────────────────────────────────────── */}
-      {!org && (
-        <div style={{ background: '#0f1729', borderRadius: 14, padding: 48, textAlign: 'center', border: '1px solid #1a2540' }}>
-          <div style={{ width: 52, height: 52, borderRadius: 13, background: 'rgba(0,212,255,0.06)', border: '1px solid rgba(0,212,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
-            <Activity size={24} color="#00d4ff" strokeWidth={1.5} />
+      {/* Empty state */}
+      {!org && !dbError && (
+        <div style={{ background: '#ffffff', borderRadius: 14, padding: 48, textAlign: 'center', border: '1px solid #dde3ec' }}>
+          <div style={{ width: 48, height: 48, borderRadius: 12, background: '#eff6ff', border: '1px solid #bfdbfe', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+            <Activity size={22} color="#0ea5e9" strokeWidth={1.5} />
           </div>
-          <p style={{ color: '#ffffff', fontSize: 16, fontWeight: 600, marginBottom: 8 }}>No organisation set up yet</p>
-          <p style={{ color: '#3d4f6b', fontSize: 14 }}>Complete your profile to start scanning.</p>
+          <p style={{ color: '#0f172a', fontSize: 15, fontWeight: 600, marginBottom: 6 }}>No organisation set up yet</p>
+          <p style={{ color: '#94a3b8', fontSize: 13 }}>Complete your profile to start scanning.</p>
         </div>
       )}
     </div>

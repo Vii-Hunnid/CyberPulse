@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import {
   Mail, Lock, Shield, EyeOff, Radio, Bug,
-  CheckCircle2, ArrowRight, Zap, TrendingUp, Users,
+  CheckCircle2, ArrowRight, BarChart2, Globe, ShieldCheck,
 } from 'lucide-react';
 
 export const metadata: Metadata = {
@@ -18,237 +18,269 @@ export const metadata: Metadata = {
 };
 
 const CHECK_CARDS = [
-  { Icon: Mail,   title: 'Email Security',           desc: 'SPF, DKIM, and DMARC protection against email spoofing and phishing attacks' },
-  { Icon: Lock,   title: 'SSL Certificate Health',   desc: 'Certificate validity, expiry warnings, and TLS version compliance' },
-  { Icon: Shield, title: 'Website Security Headers', desc: 'CSP, HSTS, X-Frame-Options, and all critical HTTP security headers' },
-  { Icon: EyeOff, title: 'Dark Web Exposure',        desc: 'Known breach data and credential dumps linked to your domain' },
-  { Icon: Radio,  title: 'Open Port Risks',          desc: 'Dangerously exposed services including RDP, Telnet, and databases' },
-  { Icon: Bug,    title: 'Known Vulnerabilities',    desc: 'CVE database lookup against detected software versions and services' },
+  { Icon: Mail,   n: '01', title: 'Email Security',           desc: 'SPF, DKIM, and DMARC records — protect against spoofing and phishing' },
+  { Icon: Lock,   n: '02', title: 'SSL Certificate Health',   desc: 'Certificate validity, expiry date, and TLS protocol version compliance' },
+  { Icon: Shield, n: '03', title: 'Website Security Headers', desc: 'CSP, HSTS, X-Frame-Options, Referrer-Policy, and Permissions-Policy' },
+  { Icon: EyeOff, n: '04', title: 'Dark Web Exposure',        desc: 'Known credential dumps and breach data linked to your business domain' },
+  { Icon: Radio,  n: '05', title: 'Open Port Risks',          desc: 'Dangerously exposed RDP, Telnet, MongoDB, Redis, and other services' },
+  { Icon: Bug,    n: '06', title: 'Known Vulnerabilities',    desc: 'CVE database match against detected software versions on your stack' },
 ];
 
 const STATS = [
-  {
-    stat: '72%',
-    label: 'of SA SMEs have never had a cyber health check',
-    source: 'CSIR Cybersecurity Report 2023',
-    Icon: Users,
-  },
-  {
-    stat: '10%',
-    label: "of Africa's GDP is lost annually to cyber attacks",
-    source: 'Interpol African Cyberthreat Assessment',
-    Icon: TrendingUp,
-  },
-  {
-    stat: 'R50k+',
-    label: 'average cost of a single SME cyber incident in SA',
-    source: 'Allianz Risk Barometer 2024',
-    Icon: Zap,
-  },
+  { stat: '72%',   label: 'of SA SMEs have never had a cyber health check',    source: 'CSIR Cybersecurity Report 2023',        Icon: Globe },
+  { stat: '10%',   label: "of Africa's GDP lost to cyber attacks annually",    source: 'Interpol African Cyberthreat Assessment', Icon: BarChart2 },
+  { stat: 'R50k+', label: 'average cost of a single SME cyber incident in SA', source: 'Allianz Risk Barometer 2024',            Icon: ShieldCheck },
 ];
 
-const FULL_REPORT_ITEMS = [
-  'Detailed findings with step-by-step remediation guides',
-  'Dark web breach analysis — exposed emails and credentials',
-  'AI-generated insurance readiness score and grade',
-  'Downloadable PDF attestation for cyber insurance applications',
-  'Continuous monitoring with real-time threat alerts',
-];
+// Shared colour tokens — all LIGHT
+const bg     = '#f0f4f8';
+const bgCard = '#ffffff';
+const bgAlt  = '#e8edf3';
+const text   = '#0f172a';
+const textMid  = '#334155';
+const textMuted = '#64748b';
+const textFaint = '#94a3b8';
+const border   = '#dde3ec';
+const borderMid = '#c5cdd8';
+const cyan   = '#0ea5e9';
+const green  = '#10b981';
+const red    = '#ef4444';
 
 export default function HomePage() {
   return (
-    <div style={{ background: '#0a0f1e', color: '#ffffff', minHeight: '100vh', fontFamily: 'system-ui, sans-serif' }}>
+    <div style={{ fontFamily: "'Inter', system-ui, sans-serif", background: bg, color: text, minHeight: '100vh' }}>
       <style>{`
-        @keyframes gridMove {
-          0% { background-position: 0 0; }
-          100% { background-position: 40px 40px; }
-        }
-        @keyframes pulse-ring {
-          0%, 100% { opacity: 0.6; transform: scale(1); }
-          50% { opacity: 1; transform: scale(1.04); }
-        }
-        .animated-grid {
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        @keyframes gridPan { 0% { background-position: 0 0; } 100% { background-position: 60px 60px; } }
+        @keyframes pulseGreen { 0%,100% { opacity:.7; transform:scale(1); } 50% { opacity:1; transform:scale(1.2); } }
+        .hero-grid {
           background-image:
-            linear-gradient(rgba(0,212,255,0.035) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0,212,255,0.035) 1px, transparent 1px);
-          background-size: 40px 40px;
-          animation: gridMove 10s linear infinite;
+            linear-gradient(rgba(14,165,233,.06) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(14,165,233,.06) 1px, transparent 1px);
+          background-size: 60px 60px;
+          animation: gridPan 14s linear infinite;
         }
-        .check-card { transition: all 0.2s ease; }
-        .check-card:hover { box-shadow: 0 4px 32px rgba(0,212,255,0.12); transform: translateY(-3px); border-color: rgba(0,212,255,0.3) !important; }
-        .nav-link { transition: color 0.15s; }
-        .nav-link:hover { color: #00d4ff !important; }
-        .cta-btn-primary:hover { background: #00b8d9 !important; }
-        .cta-btn-outline:hover { background: rgba(0,212,255,0.08) !important; color: #fff !important; }
-        .scan-input:focus { border-color: rgba(0,212,255,0.5) !important; outline: none; box-shadow: 0 0 0 3px rgba(0,212,255,0.08); }
+        .check-card { transition: box-shadow .2s, border-color .2s, transform .2s; }
+        .check-card:hover { box-shadow: 0 6px 28px rgba(14,165,233,.12); border-color: #0ea5e9 !important; transform: translateY(-2px); }
+        .nav-link:hover { color: #0ea5e9 !important; }
+        .scan-input { transition: border-color .2s, box-shadow .2s; }
+        .scan-input:focus { border-color: rgba(14,165,233,.5) !important; outline: none; box-shadow: 0 0 0 3px rgba(14,165,233,.1); }
+        .mono { font-family: ui-monospace, 'SF Mono', Menlo, monospace; }
+        a { text-decoration: none; }
       `}</style>
 
-      {/* ─── Navigation ─────────────────────────────────────────────────── */}
-      <header style={{ position: 'sticky', top: 0, zIndex: 50, backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', background: 'rgba(10,15,30,0.85)', borderBottom: '1px solid rgba(26,37,64,0.8)' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 60 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 28, height: 28, borderRadius: 6, background: 'linear-gradient(135deg, #0a0f1e, #00d4ff22)', border: '1.5px solid #00d4ff55', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Shield size={14} color="#00d4ff" strokeWidth={2} />
+      {/* ── Navigation ───────────────────────────────────────────────────── */}
+      <header style={{ background: bgCard, borderBottom: `1px solid ${border}`, position: 'sticky', top: 0, zIndex: 50 }}>
+        <div style={{ maxWidth: 1140, margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 60 }}>
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+            <div style={{ width: 30, height: 30, borderRadius: 7, background: 'rgba(14,165,233,.08)', border: `1.5px solid rgba(14,165,233,.2)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Shield size={14} color={cyan} strokeWidth={1.5} />
             </div>
-            <span style={{ fontSize: 17, fontWeight: 700, color: '#00d4ff', letterSpacing: '-0.3px' }}>CyberPulse</span>
-          </div>
+            <span className="mono" style={{ fontSize: 15, fontWeight: 700, color: text }}>CyberPulse</span>
+          </Link>
 
-          <nav style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Link href="/login" className="nav-link" style={{ padding: '8px 16px', color: '#8892a4', fontSize: 14, fontWeight: 500, textDecoration: 'none', borderRadius: 6 }}>
-              Sign In
-            </Link>
-            <Link href="/register" style={{
-              padding: '8px 18px', background: '#00d4ff', color: '#0a0f1e',
-              fontSize: 14, fontWeight: 700, borderRadius: 6, textDecoration: 'none',
-              display: 'flex', alignItems: 'center', gap: 6,
-            }}>
-              Get Started Free
-              <ArrowRight size={14} strokeWidth={2.5} />
+          <nav style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <a href="#features" className="nav-link mono" style={{ padding: '6px 14px', color: textMuted, fontSize: 11, letterSpacing: '.5px', transition: 'color .15s' }}>{'>'}_&nbsp;FEATURES</a>
+            <a href="#how-it-works" className="nav-link mono" style={{ padding: '6px 14px', color: textMuted, fontSize: 11, letterSpacing: '.5px', transition: 'color .15s' }}>{'>'}_&nbsp;HOW IT WORKS</a>
+            <Link href="/login" className="nav-link mono" style={{ padding: '6px 14px', color: textMuted, fontSize: 11, letterSpacing: '.5px', transition: 'color .15s' }}>{'>'}_&nbsp;SIGN IN</Link>
+            <Link href="/register" className="mono" style={{ marginLeft: 6, padding: '8px 18px', background: cyan, color: '#fff', fontWeight: 700, fontSize: 11, borderRadius: 6, letterSpacing: '.5px' }}>
+              GET STARTED /&gt;
             </Link>
           </nav>
         </div>
       </header>
 
-      {/* ─── Hero ─────────────────────────────────────────────────────────── */}
-      <section className="animated-grid" style={{ padding: '88px 24px 96px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-        {/* Ambient glow */}
-        <div style={{ position: 'absolute', top: '30%', left: '50%', transform: 'translate(-50%, -50%)', width: 600, height: 300, background: 'radial-gradient(ellipse, rgba(0,212,255,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
+      {/* ── Hero (light slate) ────────────────────────────────────────────── */}
+      <section className="hero-grid" style={{ background: bg, padding: '100px 24px 108px', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: '30%', left: '50%', transform: 'translate(-50%,-50%)', width: 700, height: 400, background: 'radial-gradient(ellipse, rgba(14,165,233,.07) 0%, transparent 65%)', pointerEvents: 'none' }} />
 
-        <div style={{ maxWidth: 720, margin: '0 auto', position: 'relative' }}>
-          {/* Badge */}
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(0,212,255,0.08)', border: '1px solid rgba(0,212,255,0.2)', borderRadius: 20, padding: '5px 14px', marginBottom: 24 }}>
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#00ff88', animation: 'pulse-ring 2s ease-in-out infinite' }} />
-            <span style={{ color: '#00d4ff', fontSize: 12, fontWeight: 600, letterSpacing: 0.5 }}>Free Instant Scan — No Account Required</span>
+        <div style={{ maxWidth: 760, margin: '0 auto', textAlign: 'center', position: 'relative' }}>
+          <div className="mono" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(14,165,233,.06)', border: `1px solid rgba(14,165,233,.18)`, borderRadius: 4, padding: '5px 14px', marginBottom: 28 }}>
+            <div style={{ width: 7, height: 7, borderRadius: '50%', background: green, animation: 'pulseGreen 2.5s ease-in-out infinite' }} />
+            <span style={{ color: cyan, fontSize: 11, fontWeight: 600, letterSpacing: 1.5 }}>[ FREE INSTANT SECURITY SCAN ]</span>
           </div>
 
-          <h1 style={{ fontSize: 'clamp(34px, 5.5vw, 60px)', fontWeight: 800, lineHeight: 1.1, marginBottom: 22, letterSpacing: '-0.5px' }}>
-            Know Your Cyber Risk{' '}
-            <span style={{ background: 'linear-gradient(90deg, #00d4ff, #00ff88)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-              Before Attackers Do
-            </span>
+          <h1 style={{ fontSize: 'clamp(38px, 6vw, 66px)', fontWeight: 800, lineHeight: 1.06, color: text, marginBottom: 22, letterSpacing: '-2px' }}>
+            Know your cyber risk<br />
+            <span style={{ color: cyan }}>before attackers do.</span>
           </h1>
-          <p style={{ fontSize: 18, color: '#8892a4', marginBottom: 44, lineHeight: 1.65, maxWidth: 560, margin: '0 auto 44px' }}>
-            Instant security scan for your business domain. Six critical checks.
-            Results in under 60 seconds.
+          <p style={{ fontSize: 18, color: textMuted, marginBottom: 48, lineHeight: 1.65, maxWidth: 540, margin: '0 auto 48px' }}>
+            Instant security scan across six critical categories.
+            No account, no software, no waiting. Your business grade in under 60 seconds.
           </p>
 
-          {/* Scan form */}
-          <form action="/scan" method="GET" style={{ display: 'flex', gap: 10, maxWidth: 580, margin: '0 auto 18px' }}>
-            <input
-              name="domain"
-              type="text"
-              placeholder="yourbusiness.co.za"
-              className="scan-input"
-              style={{
-                flex: 1, padding: '15px 20px',
-                background: 'rgba(15,23,41,0.9)',
-                border: '1px solid #1a2540', borderRadius: 8,
-                color: '#fff', fontSize: 15, transition: 'all 0.2s',
-              }}
-            />
-            <button
-              type="submit"
-              style={{
-                padding: '15px 26px', background: '#00d4ff', color: '#0a0f1e',
-                fontWeight: 700, fontSize: 15, borderRadius: 8, border: 'none',
-                cursor: 'pointer', whiteSpace: 'nowrap', letterSpacing: '-0.2px',
-              }}
-            >
-              Scan Free →
-            </button>
+          <form action="/scan" method="GET" style={{ maxWidth: 580, margin: '0 auto 22px' }}>
+            <div style={{ display: 'flex', gap: 0, background: bgCard, border: `1.5px solid ${border}`, borderRadius: 10, overflow: 'hidden', boxShadow: '0 2px 16px rgba(0,0,0,.06)' }}>
+              <input
+                name="domain"
+                type="text"
+                placeholder="// yourbusiness.co.za"
+                className="scan-input mono"
+                style={{ flex: 1, padding: '16px 20px', background: 'transparent', border: 'none', color: text, fontSize: 14 }}
+              />
+              <button type="submit" className="mono" style={{ padding: '16px 28px', background: cyan, color: '#fff', fontWeight: 700, fontSize: 12, border: 'none', cursor: 'pointer', letterSpacing: '.5px', flexShrink: 0, borderRadius: '0 8px 8px 0' }}>
+                SCAN FREE /&gt;
+              </button>
+            </div>
           </form>
 
-          {/* Trust row */}
-          <div style={{ display: 'flex', gap: 20, justifyContent: 'center', flexWrap: 'wrap' }}>
-            {['No installation', 'POPIA compliant', 'SCCA encrypted', 'Private results'].map((t) => (
-              <span key={t} style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#3d4f6b', fontSize: 12 }}>
-                <CheckCircle2 size={12} color="#3d4f6b" strokeWidth={2} /> {t}
-              </span>
+          <div className="mono" style={{ display: 'flex', gap: 24, justifyContent: 'center', flexWrap: 'wrap' }}>
+            {['// No installation', '// POPIA compliant', '// SCCA encrypted', '// Results private'].map((t) => (
+              <span key={t} style={{ fontSize: 11, color: textFaint }}>{t}</span>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ─── Thin separator ─────────────────────────────────────────────────── */}
-      <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, #1a2540 30%, #1a2540 70%, transparent)' }} />
+      {/* ── Divider ──────────────────────────────────────────────────────── */}
+      <div style={{ height: 1, background: `linear-gradient(90deg, transparent, ${borderMid} 30%, ${borderMid} 70%, transparent)` }} />
 
-      {/* ─── What We Check ────────────────────────────────────────────────── */}
-      <section style={{ padding: '88px 24px', maxWidth: 1100, margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: 56 }}>
-          <div style={{ color: '#00d4ff', fontSize: 12, fontWeight: 600, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>What We Scan</div>
-          <h2 style={{ fontSize: 36, fontWeight: 700, letterSpacing: '-0.3px' }}>Six Critical Security Categories</h2>
-          <p style={{ color: '#8892a4', marginTop: 12, fontSize: 16 }}>Every check runs automatically — no configuration needed</p>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
-          {CHECK_CARDS.map(({ Icon, title, desc }, i) => (
-            <div key={title} className="check-card"
-              style={{ background: '#0f1729', border: '1px solid #1a2540', borderRadius: 12, padding: '28px 28px 28px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(0,212,255,0.06)', border: '1px solid rgba(0,212,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Icon size={20} color="#00d4ff" strokeWidth={1.5} />
-                </div>
-                <span style={{ fontSize: 11, color: '#3d4f6b', fontWeight: 600 }}>CHECK {String(i + 1).padStart(2, '0')}</span>
-              </div>
-              <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>{title}</h3>
-              <p style={{ color: '#8892a4', fontSize: 14, lineHeight: 1.65 }}>{desc}</p>
+      {/* ── What We Scan ─────────────────────────────────────────────────── */}
+      <section id="features" style={{ background: bgCard, padding: '96px 24px' }}>
+        <div style={{ maxWidth: 1140, margin: '0 auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 52 }}>
+            <span className="mono" style={{ fontSize: 10, color: cyan, letterSpacing: 2, fontWeight: 700 }}>[ 001 ]</span>
+            <div style={{ flex: 1, height: 1, background: border }} />
+            <span className="mono" style={{ fontSize: 10, color: textFaint, letterSpacing: 2 }}>WHAT WE SCAN</span>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, alignItems: 'start' }}>
+            <div style={{ paddingRight: 24 }}>
+              <h2 style={{ fontSize: 'clamp(26px, 3.5vw, 42px)', fontWeight: 800, lineHeight: 1.1, letterSpacing: '-1px', marginBottom: 18, color: text }}>
+                Six critical categories.<br />
+                <span style={{ color: cyan }}>Scanned instantly.</span>
+              </h2>
+              <p style={{ fontSize: 16, color: textMuted, lineHeight: 1.7, marginBottom: 32 }}>
+                Every check runs automatically in parallel. No configuration, no plugins, no waiting. Just type your domain and get your results.
+              </p>
+              <Link href="/scan" className="mono" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 22px', background: text, color: '#f8fafc', fontWeight: 700, fontSize: 11, borderRadius: 7, letterSpacing: '.5px' }}>
+                RUN YOUR FREE SCAN /&gt;
+              </Link>
             </div>
-          ))}
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              {CHECK_CARDS.map(({ Icon, n, title, desc }) => (
+                <div key={title} className="check-card" style={{ background: bg, border: `1px solid ${border}`, borderRadius: 10, padding: '18px 18px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 8, background: `rgba(14,165,233,.07)`, border: `1px solid rgba(14,165,233,.14)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Icon size={16} color={cyan} strokeWidth={1.5} />
+                    </div>
+                    <span className="mono" style={{ fontSize: 9, color: textFaint, letterSpacing: 1 }}>{n}</span>
+                  </div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: text, marginBottom: 5 }}>{title}</div>
+                  <div style={{ fontSize: 12, color: textMuted, lineHeight: 1.55 }}>{desc}</div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* ─── Sample Report Preview ────────────────────────────────────────── */}
-      <section style={{ padding: '88px 24px', background: 'linear-gradient(180deg, #0a0f1e 0%, #080d1a 100%)', borderTop: '1px solid #0f1729', borderBottom: '1px solid #0f1729' }}>
-        <div style={{ maxWidth: 820, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 48 }}>
-            <div style={{ color: '#00d4ff', fontSize: 12, fontWeight: 600, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>Live Preview</div>
-            <h2 style={{ fontSize: 36, fontWeight: 700 }}>See What Your Report Looks Like</h2>
-            <p style={{ color: '#8892a4', marginTop: 12 }}>Real findings, real scores — for your actual domain</p>
+      {/* ── The Problem / Stats ───────────────────────────────────────────── */}
+      <section style={{ background: bg, padding: '96px 24px', borderTop: `1px solid ${border}` }}>
+        <div style={{ maxWidth: 1140, margin: '0 auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 52 }}>
+            <span className="mono" style={{ fontSize: 10, color: red, letterSpacing: 2, fontWeight: 700 }}>[ 002 ]</span>
+            <div style={{ flex: 1, height: 1, background: border }} />
+            <span className="mono" style={{ fontSize: 10, color: textFaint, letterSpacing: 2 }}>THE REALITY</span>
           </div>
 
-          <div style={{ background: '#0f1729', borderRadius: 16, border: '1px solid #1a2540', overflow: 'hidden' }}>
-            {/* Report header */}
-            <div style={{ background: '#0a0f1e', padding: '20px 28px', borderBottom: '1px solid #1a2540', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 52, height: 52, borderRadius: '50%', border: '3px solid #ff3366', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 18, fontWeight: 800, color: '#ff3366', lineHeight: 1 }}>42</div>
-                    <div style={{ fontSize: 9, color: '#8892a4' }}>/ 100</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 56, alignItems: 'center' }}>
+            <div>
+              <h2 style={{ fontSize: 'clamp(26px, 3.5vw, 42px)', fontWeight: 800, lineHeight: 1.1, letterSpacing: '-1px', marginBottom: 18, color: text }}>
+                SA businesses are the{' '}
+                <span style={{ color: red }}>most targeted</span>{' '}
+                in Africa.
+              </h2>
+              <p style={{ fontSize: 16, color: textMuted, lineHeight: 1.7 }}>
+                Most small businesses don&apos;t know they&apos;re vulnerable until after the breach.
+                CyberPulse gives you enterprise-grade visibility in seconds — completely free.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {STATS.map(({ stat, label, source, Icon }) => (
+                <div key={stat} style={{ display: 'flex', alignItems: 'center', gap: 18, background: bgCard, border: `1px solid ${border}`, borderRadius: 10, padding: '18px 22px', position: 'relative', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,.03)' }}>
+                  <div style={{ position: 'absolute', top: 7, left: 7, width: 7, height: 7, borderTop: `1.5px solid ${borderMid}`, borderLeft: `1.5px solid ${borderMid}` }} />
+                  <div style={{ position: 'absolute', bottom: 7, right: 7, width: 7, height: 7, borderBottom: `1.5px solid ${borderMid}`, borderRight: `1.5px solid ${borderMid}` }} />
+                  <div style={{ flexShrink: 0, width: 40, height: 40, borderRadius: 9, background: 'rgba(14,165,233,.07)', border: `1px solid rgba(14,165,233,.14)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Icon size={18} color={cyan} strokeWidth={1.5} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div className="mono" style={{ fontSize: 26, fontWeight: 800, color: text, lineHeight: 1, marginBottom: 4 }}>{stat}</div>
+                    <div style={{ fontSize: 13, color: textMid, marginBottom: 2 }}>{label}</div>
+                    <div className="mono" style={{ fontSize: 10, color: textFaint }}>— {source}</div>
                   </div>
                 </div>
-                <div>
-                  <div style={{ fontSize: 15, fontWeight: 600 }}>example-business.co.za</div>
-                  <div style={{ display: 'inline-block', background: '#ff3366', color: '#fff', fontWeight: 700, fontSize: 12, padding: '2px 10px', borderRadius: 4, marginTop: 4 }}>Grade D</div>
-                </div>
-              </div>
-              <div style={{ fontSize: 12, color: '#3d4f6b' }}>25 Mar 2026</div>
-            </div>
-
-            {/* Findings */}
-            <div style={{ padding: '20px 28px' }}>
-              {[
-                { sev: 'CRITICAL', color: '#ff3366', title: 'No DMARC policy — email spoofing is possible' },
-                { sev: 'HIGH',     color: '#ff6b35', title: 'TLS 1.0 still enabled on web server' },
-                { sev: 'MEDIUM',   color: '#f5c518', title: 'Content-Security-Policy header missing' },
-              ].map((f) => (
-                <div key={f.title} style={{ background: '#141d30', borderRadius: 8, padding: '13px 16px', marginBottom: 8, borderLeft: `3px solid ${f.color}`, display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <span style={{ fontSize: 10, fontWeight: 700, background: f.color, color: '#fff', padding: '2px 8px', borderRadius: 3, flexShrink: 0 }}>{f.sev}</span>
-                  <span style={{ fontSize: 14, color: '#e2e8f0' }}>{f.title}</span>
-                </div>
               ))}
+            </div>
+          </div>
+        </div>
+      </section>
 
-              {/* Locked overlay */}
-              <div style={{ position: 'relative', marginTop: 12, borderRadius: 10, overflow: 'hidden' }}>
-                <div style={{ filter: 'blur(5px)', opacity: 0.35 }}>
-                  {[0,1,2].map(i => <div key={i} style={{ height: 44, background: '#141d30', borderRadius: 8, marginBottom: 8 }} />)}
+      {/* ── Sample Report Preview ─────────────────────────────────────────── */}
+      <section style={{ background: bgCard, padding: '96px 24px', borderTop: `1px solid ${border}` }}>
+        <div style={{ maxWidth: 1140, margin: '0 auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 52 }}>
+            <span className="mono" style={{ fontSize: 10, color: '#f59e0b', letterSpacing: 2, fontWeight: 700 }}>[ 003 ]</span>
+            <div style={{ flex: 1, height: 1, background: border }} />
+            <span className="mono" style={{ fontSize: 10, color: textFaint, letterSpacing: 2 }}>LIVE PREVIEW</span>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 56, alignItems: 'center' }}>
+            <div>
+              <h2 style={{ fontSize: 'clamp(26px, 3.5vw, 42px)', fontWeight: 800, lineHeight: 1.1, letterSpacing: '-1px', marginBottom: 18, color: text }}>
+                See exactly what<br />your report looks like.
+              </h2>
+              <p style={{ fontSize: 16, color: textMuted, lineHeight: 1.7, marginBottom: 28 }}>
+                Real findings, real scores — for your actual domain. Create a free account to unlock dark web analysis, full remediation steps, and your insurance readiness PDF.
+              </p>
+              <Link href="/register" className="mono" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 22px', background: cyan, color: '#fff', fontWeight: 700, fontSize: 11, borderRadius: 7, letterSpacing: '.5px' }}>
+                UNLOCK FULL REPORT /&gt;
+              </Link>
+            </div>
+
+            <div style={{ background: bgCard, borderRadius: 12, border: `1px solid ${border}`, overflow: 'hidden', boxShadow: '0 16px 48px rgba(0,0,0,.08)' }}>
+              {/* Report header bar */}
+              <div style={{ background: '#0c1220', padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 46, height: 46, borderRadius: '50%', border: `3px solid ${red}`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(239,68,68,.08)' }}>
+                    <div style={{ textAlign: 'center' }}>
+                      <div className="mono" style={{ fontSize: 15, fontWeight: 800, color: red, lineHeight: 1 }}>42</div>
+                      <div style={{ fontSize: 8, color: '#64748b' }}>/ 100</div>
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#f8fafc' }}>example-business.co.za</div>
+                    <div className="mono" style={{ display: 'inline-block', background: red, color: '#fff', fontWeight: 700, fontSize: 9, padding: '2px 8px', borderRadius: 3, marginTop: 3, letterSpacing: 1 }}>GRADE D</div>
+                  </div>
                 </div>
-                <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(10,15,30,0.88)', borderRadius: 10, gap: 10 }}>
-                  <Lock size={22} color="#00d4ff" strokeWidth={1.5} />
-                  <p style={{ fontSize: 13, color: '#c8d0dd', textAlign: 'center', margin: 0 }}>
-                    Full report with dark web analysis,<br />insurance score, and fix guides
-                  </p>
-                  <Link href="/register" style={{ background: '#00d4ff', color: '#0a0f1e', fontWeight: 700, padding: '9px 22px', borderRadius: 6, textDecoration: 'none', fontSize: 13 }}>
-                    Unlock Free
-                  </Link>
+                <span className="mono" style={{ fontSize: 10, color: '#475569' }}>25 MAR 2026</span>
+              </div>
+
+              <div style={{ padding: '16px 20px', background: bgCard }}>
+                {[
+                  { sev: 'CRITICAL', color: red,      title: 'No DMARC policy — email spoofing is possible' },
+                  { sev: 'HIGH',     color: '#f97316', title: 'TLS 1.0 still enabled on web server' },
+                  { sev: 'MEDIUM',   color: '#f59e0b', title: 'Content-Security-Policy header missing' },
+                ].map((f) => (
+                  <div key={f.title} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 7, marginBottom: 7, background: bg, border: `1px solid ${border}`, borderLeft: `3px solid ${f.color}` }}>
+                    <span className="mono" style={{ fontSize: 9, fontWeight: 700, background: f.color, color: '#fff', padding: '2px 7px', borderRadius: 3, flexShrink: 0, letterSpacing: .5 }}>{f.sev}</span>
+                    <span style={{ fontSize: 12, color: textMid }}>{f.title}</span>
+                  </div>
+                ))}
+
+                <div style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', marginTop: 8 }}>
+                  <div style={{ filter: 'blur(4px)', opacity: .3 }}>
+                    {[0,1,2].map(i => <div key={i} style={{ height: 36, background: bg, borderRadius: 6, marginBottom: 7 }} />)}
+                  </div>
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(240,244,248,.92)', borderRadius: 8, gap: 8 }}>
+                    <Lock size={18} color={textMuted} strokeWidth={1.5} />
+                    <p style={{ fontSize: 12, color: textMuted, textAlign: 'center', margin: 0 }}>Full report with dark web + remediation steps</p>
+                    <Link href="/register" className="mono" style={{ background: cyan, color: '#fff', fontWeight: 700, padding: '7px 16px', borderRadius: 5, fontSize: 10, letterSpacing: .5 }}>
+                      UNLOCK FREE /&gt;
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
@@ -256,117 +288,126 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── Stats ────────────────────────────────────────────────────────── */}
-      <section style={{ padding: '88px 24px', maxWidth: 1100, margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: 56 }}>
-          <div style={{ color: '#00d4ff', fontSize: 12, fontWeight: 600, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>The Reality</div>
-          <h2 style={{ fontSize: 36, fontWeight: 700 }}>Why SA Businesses Can&apos;t Wait</h2>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
-          {STATS.map(({ stat, label, source, Icon }) => (
-            <div key={stat} style={{ background: '#0f1729', border: '1px solid #1a2540', borderRadius: 14, padding: '36px 32px', textAlign: 'center' }}>
-              <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(0,212,255,0.06)', border: '1px solid rgba(0,212,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-                <Icon size={22} color="#00d4ff" strokeWidth={1.5} />
-              </div>
-              <div style={{ fontSize: 52, fontWeight: 800, color: '#00d4ff', marginBottom: 14, letterSpacing: '-1px' }}>{stat}</div>
-              <p style={{ fontSize: 15, marginBottom: 14, lineHeight: 1.55, color: '#c8d0dd' }}>{label}</p>
-              <p style={{ fontSize: 11, color: '#3d4f6b' }}>— {source}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ─── How It Works ─────────────────────────────────────────────────── */}
-      <section style={{ padding: '88px 24px', background: 'rgba(15,23,41,0.5)', borderTop: '1px solid #0f1729', borderBottom: '1px solid #0f1729' }}>
-        <div style={{ maxWidth: 880, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 56 }}>
-            <div style={{ color: '#00d4ff', fontSize: 12, fontWeight: 600, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>How It Works</div>
-            <h2 style={{ fontSize: 36, fontWeight: 700 }}>Three Steps to Security Clarity</h2>
+      {/* ── How It Works ──────────────────────────────────────────────────── */}
+      <section id="how-it-works" style={{ background: bg, padding: '96px 24px', borderTop: `1px solid ${border}` }}>
+        <div style={{ maxWidth: 1140, margin: '0 auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 52 }}>
+            <span className="mono" style={{ fontSize: 10, color: green, letterSpacing: 2, fontWeight: 700 }}>[ 004 ]</span>
+            <div style={{ flex: 1, height: 1, background: border }} />
+            <span className="mono" style={{ fontSize: 10, color: textFaint, letterSpacing: 2 }}>HOW IT WORKS</span>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, position: 'relative' }}>
+
+          <div style={{ textAlign: 'center', marginBottom: 52 }}>
+            <h2 style={{ fontSize: 'clamp(26px, 3.5vw, 42px)', fontWeight: 800, letterSpacing: '-1px', color: text }}>
+              From domain to report<br /><span style={{ color: cyan }}>in three steps.</span>
+            </h2>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2, position: 'relative' }}>
+            <div style={{ position: 'absolute', top: 36, left: '18%', right: '18%', height: 1, background: `linear-gradient(90deg, ${cyan}, ${border} 50%, ${cyan})`, opacity: .25 }} />
             {[
-              { num: '01', title: 'Enter your domain', desc: 'No sign-up. No installation. Just type your business website address.' },
-              { num: '02', title: 'We run 6 checks', desc: 'Email, SSL, headers, dark web, ports, and known vulnerabilities.' },
-              { num: '03', title: 'Get your free report', desc: 'Score, grade, top findings, and insurance readiness — instantly.' },
-            ].map((step, i) => (
-              <div key={step.num} style={{ textAlign: 'center', position: 'relative', padding: '0 16px' }}>
-                {i < 2 && (
-                  <div style={{ position: 'absolute', top: 22, left: '62%', width: '38%', height: 1, background: 'linear-gradient(90deg, #1a2540, transparent)' }} />
-                )}
-                <div style={{ width: 48, height: 48, borderRadius: '50%', background: '#0f1729', border: '2px solid #1a2540', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: '#00d4ff' }}>{step.num}</span>
+              { num: '01', title: 'Enter your domain', desc: 'No sign-up. No installation. Just type your business website address and hit scan.', col: cyan },
+              { num: '02', title: 'We run 6 checks', desc: 'Email security, SSL health, security headers, dark web exposure, open ports, and CVE lookup — all in parallel.', col: '#f59e0b' },
+              { num: '03', title: 'Get your report', desc: 'Security score, letter grade, top findings, AI narrative, and insurance readiness indicator — in under 60 seconds.', col: green },
+            ].map((step) => (
+              <div key={step.num} style={{ textAlign: 'center', padding: '0 28px' }}>
+                <div className="mono" style={{ width: 56, height: 56, borderRadius: '50%', background: bgCard, border: `2px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', fontSize: 16, fontWeight: 800, color: step.col, position: 'relative', zIndex: 1, boxShadow: '0 2px 8px rgba(0,0,0,.05)' }}>
+                  {step.num}
                 </div>
-                <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 10 }}>{step.title}</h3>
-                <p style={{ fontSize: 14, color: '#8892a4', lineHeight: 1.65 }}>{step.desc}</p>
+                <div style={{ fontSize: 17, fontWeight: 700, color: text, marginBottom: 10 }}>{step.title}</div>
+                <div style={{ fontSize: 14, color: textMuted, lineHeight: 1.65 }}>{step.desc}</div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ─── Full Report CTA ──────────────────────────────────────────────── */}
-      <section style={{ padding: '88px 24px', maxWidth: 1100, margin: '0 auto' }}>
-        <div style={{ background: 'linear-gradient(135deg, #0f1729, #0a1628)', borderRadius: 20, border: '1px solid #1a2540', padding: '56px 48px', display: 'flex', gap: 56, alignItems: 'center', flexWrap: 'wrap' }}>
-          <div style={{ flex: '1 1 320px' }}>
-            <div style={{ color: '#00d4ff', fontSize: 12, fontWeight: 600, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>Free Account</div>
-            <h2 style={{ fontSize: 32, fontWeight: 700, marginBottom: 16, lineHeight: 1.2 }}>
-              Your Full Report Includes Everything
-            </h2>
-            <p style={{ color: '#8892a4', fontSize: 16, lineHeight: 1.65 }}>
-              The free scan gives you a taste. Create your free account to unlock the complete picture.
-            </p>
-          </div>
-          <div style={{ flex: '1 1 300px' }}>
-            <ul style={{ listStyle: 'none', padding: 0, marginBottom: 28 }}>
-              {FULL_REPORT_ITEMS.map((item) => (
-                <li key={item} style={{ display: 'flex', gap: 10, marginBottom: 12, alignItems: 'flex-start' }}>
-                  <CheckCircle2 size={16} color="#00ff88" strokeWidth={2} style={{ flexShrink: 0, marginTop: 2 }} />
-                  <span style={{ color: '#c8d0dd', fontSize: 14, lineHeight: 1.5 }}>{item}</span>
-                </li>
-              ))}
-            </ul>
-            <Link href="/register" style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8,
-              padding: '14px 28px', background: '#00d4ff', color: '#0a0f1e',
-              fontWeight: 700, borderRadius: 8, textDecoration: 'none', fontSize: 15,
-            }}>
-              Create Free Account <ArrowRight size={16} strokeWidth={2.5} />
-            </Link>
+      {/* ── Full Report CTA (slate with strong border accent) ──────────────── */}
+      <section style={{ background: bgCard, padding: '96px 24px', borderTop: `1px solid ${border}` }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          <div style={{ background: bg, border: `1.5px solid ${borderMid}`, borderRadius: 16, padding: '56px 48px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 56, alignItems: 'center', position: 'relative', overflow: 'hidden' }}>
+            {/* Corner bracket decorations */}
+            <div style={{ position: 'absolute', top: 16, left: 16, width: 16, height: 16, borderTop: `2px solid ${cyan}`, borderLeft: `2px solid ${cyan}` }} />
+            <div style={{ position: 'absolute', top: 16, right: 16, width: 16, height: 16, borderTop: `2px solid ${cyan}`, borderRight: `2px solid ${cyan}` }} />
+            <div style={{ position: 'absolute', bottom: 16, left: 16, width: 16, height: 16, borderBottom: `2px solid ${cyan}`, borderLeft: `2px solid ${cyan}` }} />
+            <div style={{ position: 'absolute', bottom: 16, right: 16, width: 16, height: 16, borderBottom: `2px solid ${cyan}`, borderRight: `2px solid ${cyan}` }} />
+
+            <div>
+              <div className="mono" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(14,165,233,.06)', border: `1px solid rgba(14,165,233,.18)`, borderRadius: 4, padding: '4px 12px', marginBottom: 20 }}>
+                <span style={{ color: cyan, fontSize: 10, letterSpacing: 1.5 }}>[ FREE ACCOUNT ]</span>
+              </div>
+              <h2 style={{ fontSize: 'clamp(26px, 3vw, 38px)', fontWeight: 800, color: text, marginBottom: 16, lineHeight: 1.1, letterSpacing: '-0.5px' }}>
+                Your full report includes everything.
+              </h2>
+              <p style={{ fontSize: 16, color: textMuted, lineHeight: 1.7 }}>
+                The free scan shows you the headline score. Create your free account to unlock the complete picture — at no cost.
+              </p>
+            </div>
+
+            <div>
+              <ul style={{ listStyle: 'none', padding: 0, marginBottom: 28 }}>
+                {[
+                  'Detailed findings with step-by-step remediation guides',
+                  'Dark web breach analysis — exposed emails and credentials',
+                  'AI-generated insurance readiness score and grade',
+                  'Downloadable PDF attestation for cyber insurance applications',
+                  'Continuous monitoring with real-time threat alerts',
+                  'Scan history and security trend tracking',
+                ].map((item) => (
+                  <li key={item} style={{ display: 'flex', gap: 10, marginBottom: 10, alignItems: 'flex-start' }}>
+                    <CheckCircle2 size={14} color={green} strokeWidth={2} style={{ flexShrink: 0, marginTop: 2 }} />
+                    <span style={{ fontSize: 13, color: textMid, lineHeight: 1.55 }}>{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link href="/register" className="mono" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 26px', background: cyan, color: '#fff', fontWeight: 700, fontSize: 12, borderRadius: 8, letterSpacing: '.5px' }}>
+                CREATE FREE ACCOUNT /&gt; <ArrowRight size={14} strokeWidth={2.5} />
+              </Link>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ─── Footer ───────────────────────────────────────────────────────── */}
-      <footer style={{ borderTop: '1px solid #0f1729', padding: '48px 24px 32px' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-          <div style={{ display: 'flex', gap: 48, justifyContent: 'space-between', flexWrap: 'wrap', marginBottom: 40 }}>
+      {/* ── Footer ────────────────────────────────────────────────────────── */}
+      <footer style={{ background: bg, borderTop: `1px solid ${border}`, padding: '52px 24px 28px' }}>
+        <div style={{ maxWidth: 1140, margin: '0 auto' }}>
+          <div style={{ display: 'flex', gap: 56, justifyContent: 'space-between', flexWrap: 'wrap', marginBottom: 40 }}>
             <div style={{ flex: '0 0 220px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                <Shield size={16} color="#00d4ff" strokeWidth={1.5} />
-                <span style={{ fontSize: 16, fontWeight: 700, color: '#00d4ff' }}>CyberPulse</span>
+                <Shield size={14} color={cyan} strokeWidth={1.5} />
+                <span className="mono" style={{ fontSize: 14, fontWeight: 700, color: text }}>CyberPulse</span>
               </div>
-              <p style={{ color: '#3d4f6b', fontSize: 13, lineHeight: 1.6 }}>Securing African business, one domain at a time.</p>
+              <p style={{ color: textMuted, fontSize: 13, lineHeight: 1.65 }}>Securing African business,<br />one domain at a time.</p>
             </div>
-            <div style={{ display: 'flex', gap: 48, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 56, flexWrap: 'wrap' }}>
               <div>
-                <div style={{ fontSize: 12, fontWeight: 600, color: '#8892a4', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 1 }}>Product</div>
-                {['Free Scanner', 'Full Report', 'Dark Web Monitor', 'Insurance Readiness'].map((l) => (
-                  <a key={l} href="#" style={{ display: 'block', color: '#3d4f6b', fontSize: 13, marginBottom: 10, textDecoration: 'none' }}>{l}</a>
+                <div className="mono" style={{ fontSize: 10, fontWeight: 600, color: textFaint, marginBottom: 16, letterSpacing: 1.5 }}>PRODUCT</div>
+                {[
+                  { label: 'Free Scanner',         href: '/free-scanner' },
+                  { label: 'Full Report',           href: '/full-report' },
+                  { label: 'Dark Web Monitor',      href: '/dark-web-monitor' },
+                  { label: 'Insurance Readiness',   href: '/insurance-readiness' },
+                ].map(({ label, href }) => (
+                  <Link key={label} href={href} style={{ display: 'block', color: textMuted, fontSize: 13, marginBottom: 10 }}>{label}</Link>
                 ))}
               </div>
               <div>
-                <div style={{ fontSize: 12, fontWeight: 600, color: '#8892a4', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 1 }}>Legal</div>
-                {['Privacy Policy', 'Terms of Service', 'POPIA Compliance'].map((l) => (
-                  <a key={l} href="#" style={{ display: 'block', color: '#3d4f6b', fontSize: 13, marginBottom: 10, textDecoration: 'none' }}>{l}</a>
+                <div className="mono" style={{ fontSize: 10, fontWeight: 600, color: textFaint, marginBottom: 16, letterSpacing: 1.5 }}>LEGAL</div>
+                {[
+                  { label: 'Privacy Policy',   href: '/privacy-policy' },
+                  { label: 'Terms of Service', href: '/terms' },
+                  { label: 'POPIA Compliance', href: '/popia' },
+                ].map(({ label, href }) => (
+                  <Link key={label} href={href} style={{ display: 'block', color: textMuted, fontSize: 13, marginBottom: 10 }}>{label}</Link>
                 ))}
               </div>
             </div>
           </div>
-          <div style={{ borderTop: '1px solid #0f1729', paddingTop: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-            <p style={{ color: '#3d4f6b', fontSize: 12 }}>© 2026 CyberPulse. All rights reserved.</p>
-            <div style={{ display: 'flex', gap: 10 }}>
+          <div style={{ borderTop: `1px solid ${border}`, paddingTop: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+            <p className="mono" style={{ color: textFaint, fontSize: 11, letterSpacing: .5 }}>© 2026 CYBERPULSE. ALL RIGHTS RESERVED.</p>
+            <div style={{ display: 'flex', gap: 8 }}>
               {['Secured by SCCA Protocol', 'POPIA Compliant'].map((t) => (
-                <span key={t} style={{ fontSize: 11, color: '#3d4f6b', border: '1px solid #0f1729', padding: '3px 10px', borderRadius: 20 }}>{t}</span>
+                <span key={t} className="mono" style={{ fontSize: 10, color: textFaint, border: `1px solid ${border}`, padding: '3px 10px', borderRadius: 3 }}>{t}</span>
               ))}
             </div>
           </div>

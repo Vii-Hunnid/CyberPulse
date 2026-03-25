@@ -36,7 +36,22 @@
       "Bash(nslookup -type=TXT cyberpulse.co.za 8.8.8.8)",
       "Bash(nslookup -type=TXT _dmarc.cyberpulse.co.za 8.8.8.8)",
       "Bash(nslookup -type=MX cyberpulse.co.za 8.8.8.8)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(grep -rn session!.user c:/Users/Syspro4/CyberPulse/app --include=*.ts --include=*.tsx)",
+      "Bash(pg_config --version)",
+      "Bash(psql --version)",
+      "Bash(psql -U postgres -c \"SELECT 1;\")",
+      "Bash(PGPASSWORD='' psql -U postgres -h localhost -c \"SELECT current_user;\")",
+      "Bash(PGPASSWORD='postgres' psql -U postgres -h localhost -c \"SELECT current_user;\")",
+      "Bash(PGPASSWORD='admin' psql -U postgres -h localhost -c \"SELECT current_user;\")",
+      "Bash(PGPASSWORD='root' psql -U postgres -h localhost -c \"SELECT current_user;\")",
+      "Bash(PGPASSWORD='1234' psql -U postgres -h localhost -c \"SELECT current_user;\")",
+      "Bash(psql -U postgres -h localhost --no-password -c \"SHOW data_directory;\")",
+      "Read(//c/Program Files/PostgreSQL/**)",
+      "Read(//c//**)",
+      "Bash(net stop:*)",
+      "Bash(net start:*)",
+      "Bash(pg_ctl reload:*)"
     ]
   }
 }

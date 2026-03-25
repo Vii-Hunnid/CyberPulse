@@ -5,16 +5,16 @@ import { usePathname } from 'next/navigation';
 import { LayoutDashboard, Shield, Eye } from 'lucide-react';
 
 const NAV = [
-  { href: '/dashboard',              label: 'Overview',  Icon: LayoutDashboard },
-  { href: '/dashboard/underwriting', label: 'Insurance', Icon: Shield },
-  { href: '/dashboard/darkweb',      label: 'Dark Web',  Icon: Eye },
+  { href: '/dashboard',              label: 'OVERVIEW',  Icon: LayoutDashboard },
+  { href: '/dashboard/underwriting', label: 'INSURANCE', Icon: Shield },
+  { href: '/dashboard/darkweb',      label: 'DARK WEB',  Icon: Eye },
 ];
 
 export function NavLinks() {
   const pathname = usePathname();
 
   return (
-    <nav style={{ flex: 1, padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <nav style={{ flex: 1, padding: '12px 10px', display: 'flex', flexDirection: 'column', gap: 2 }}>
       {NAV.map(({ href, label, Icon }) => {
         const active = pathname === href;
         return (
@@ -24,19 +24,21 @@ export function NavLinks() {
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 10,
+              gap: 9,
               padding: '9px 12px',
-              borderRadius: 8,
-              fontSize: 13,
-              fontWeight: active ? 600 : 500,
+              borderRadius: 6,
+              fontSize: 11,
+              fontWeight: 600,
+              fontFamily: 'ui-monospace, monospace',
+              letterSpacing: '.5px',
               textDecoration: 'none',
-              color: active ? '#00d4ff' : '#8892a4',
-              background: active ? 'rgba(0,212,255,0.08)' : 'transparent',
-              borderLeft: `2px solid ${active ? '#00d4ff' : 'transparent'}`,
-              transition: 'all 0.15s',
+              color: active ? '#0ea5e9' : '#475569',
+              background: active ? 'rgba(14,165,233,.08)' : 'transparent',
+              borderLeft: `2px solid ${active ? '#0ea5e9' : 'transparent'}`,
+              transition: 'all .15s',
             }}
           >
-            <Icon size={15} strokeWidth={active ? 2 : 1.5} />
+            <Icon size={14} strokeWidth={active ? 2 : 1.5} />
             {label}
           </Link>
         );
