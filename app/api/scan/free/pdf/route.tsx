@@ -73,7 +73,7 @@ const s = StyleSheet.create({
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
   },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  logoBox: { width: 34, height: 34, borderRadius: 8, backgroundColor: 'rgba(14,165,233,0.15)', border: '1.5px solid rgba(14,165,233,0.3)', alignItems: 'center', justifyContent: 'center' },
+  logoBox: { width: 34, height: 34, borderRadius: 8, backgroundColor: '#0c2a3d', borderWidth: 1, borderColor: '#1e6fa0', borderStyle: 'solid', alignItems: 'center', justifyContent: 'center' },
   brandCol: { gap: 2 },
   brandName: { fontSize: 17, fontFamily: 'Helvetica-Bold', color: C.card, letterSpacing: 0.3 },
   brandTag:  { fontSize: 7.5, color: C.textFaint, letterSpacing: 0.5 },
@@ -92,17 +92,17 @@ const s = StyleSheet.create({
   sectionHead: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     marginBottom: 10, paddingBottom: 8,
-    borderBottom: `1px solid ${C.border}`,
+    borderBottomWidth: 1, borderBottomColor: C.border, borderBottomStyle: 'solid',
   },
   sectionLabel: { fontSize: 8.5, fontFamily: 'Helvetica-Bold', color: C.textMuted, textTransform: 'uppercase', letterSpacing: 1.2 },
   sectionLine:  { flex: 1, height: 1, backgroundColor: C.border },
 
   // Score card
   scoreCard: {
-    backgroundColor: C.bg, borderRadius: 10, border: `1.5px solid ${C.border}`,
+    backgroundColor: C.bg, borderRadius: 10, borderWidth: 1, borderColor: C.border, borderStyle: 'solid',
     padding: 20, marginBottom: 20, flexDirection: 'row', alignItems: 'center', gap: 22,
   },
-  scoreRing: { width: 82, height: 82, borderRadius: 41, border: '4px solid', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  scoreRing: { width: 82, height: 82, borderRadius: 41, borderWidth: 4, borderStyle: 'solid', borderColor: C.border, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   scoreNum:  { fontSize: 28, fontFamily: 'Helvetica-Bold', textAlign: 'center', lineHeight: 1 },
   scoreOf:   { fontSize: 8, color: C.textFaint, textAlign: 'center', marginTop: 1 },
   scoreRight: { flex: 1, gap: 8 },
@@ -116,7 +116,7 @@ const s = StyleSheet.create({
   // Narrative
   narrativeCard: {
     backgroundColor: C.card, border: `1px solid ${C.border}`,
-    borderLeft: `4px solid ${C.cyan}`, borderRadius: 7,
+    borderLeftWidth: 4, borderLeftColor: C.cyan, borderLeftStyle: 'solid', borderRadius: 7,
     padding: 16, marginBottom: 20,
   },
   narrativePara: { fontSize: 9.5, color: C.textMid, lineHeight: 1.7, marginBottom: 5 },
@@ -144,14 +144,14 @@ const s = StyleSheet.create({
   },
   findHeader: {
     backgroundColor: C.bg, paddingHorizontal: 14, paddingVertical: 10,
-    borderBottom: `1px solid ${C.border}`, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    borderBottomWidth: 1, borderBottomColor: C.border, borderBottomStyle: 'solid', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
   },
   findHeaderTitle: { fontSize: 10, fontFamily: 'Helvetica-Bold', color: C.text },
   findHeaderSub:   { fontSize: 8, color: C.textMuted },
   findRow: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
     paddingHorizontal: 14, paddingVertical: 11,
-    borderBottom: `1px solid ${C.border}`,
+    borderBottomWidth: 1, borderBottomColor: C.border, borderBottomStyle: 'solid',
   },
   findRowInner: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
   sevBadge: {
@@ -165,7 +165,7 @@ const s = StyleSheet.create({
 
   // Dark web locked
   darkWebCard: {
-    backgroundColor: C.bg, border: `1.5px dashed ${C.border}`,
+    backgroundColor: C.bg, borderWidth: 1, borderStyle: 'dashed', borderColor: C.border,
     borderRadius: 7, padding: 18, marginBottom: 20, alignItems: 'center', gap: 6,
   },
   dwTitle: { fontSize: 10, fontFamily: 'Helvetica-Bold', color: C.textMuted },
@@ -307,7 +307,7 @@ function MiniReport({ data, logoPath }: { data: ReportPayload; logoPath: string 
 
   return (
     <Document>
-      <Page size="A4" style={s.page} wrap={false}>
+      <Page size="A4" style={s.page}>
 
         {/* ── Header ── */}
         <View style={s.header}>
@@ -423,7 +423,7 @@ function MiniReport({ data, logoPath }: { data: ReportPayload; logoPath: string 
                 style={[
                   s.findRow,
                   { backgroundColor: SEV_BG[f.severity] ?? '#f8fafc' },
-                  i === data.top3Findings.length - 1 ? { borderBottom: 'none' } : {},
+                  i === data.top3Findings.length - 1 ? { borderBottomWidth: 0 } : {},
                 ]}
               >
                 <View style={s.findRowInner}>
