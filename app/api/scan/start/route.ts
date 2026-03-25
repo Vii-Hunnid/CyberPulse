@@ -24,33 +24,34 @@ export async function POST(req: NextRequest) {
 
   const { domain } = parsed.data;
 
-  // Look up or auto-create the org for this user
-  let org = await prisma.organisation.findFirst({
-    where: { userId: session.user.id },
-  });
-  if (!org) {
-    org = await prisma.organisation.create({
-      data: {
-        userId: session.user.id,
-        name: domain,
-        domain,
-      },
+  // Try DB — if unavailable, tell client to fall back to free scan
+  let org = null;
+  let scan = null;
+  try {
+    org = await prisma.organisation.findFirst({ where: { userId: session.user.id } });
+    if (!org) {
+      org = await prisma.organisation.create({
+        data: { userId: session.user.id, name: domain, domain },
+      });
+    }
+    scan = await prisma.scan.create({
+      data: { organisationId: org.id, triggeredBy: 'MANUAL', status: 'PENDING' },
     });
+  } catch {
+    // DB not available — send client to the free public scan instead
+    return NextResponse.json(
+      { error: 'db_unavailable', freeScanUrl: `/scan?domain=${encodeURIComponent(domain)}` },
+      { status: 503 }
+    );
   }
-  const orgId = org.id;
 
-  const scan = await prisma.scan.create({
-    data: {
-      organisationId: orgId,
-      triggeredBy: 'MANUAL',
-      status: 'PENDING',
-    },
-  });
+  const orgId = org.id;
+  const scanId = scan.id;
 
   // Run scan asynchronously
   (async () => {
     try {
-      await prisma.scan.update({ where: { id: scan.id }, data: { status: 'RUNNING' } });
+      await prisma.scan.update({ where: { id: scanId }, data: { status: 'RUNNING' } });
 
       const result = await runFullScan(domain, orgId);
       const narrative = await generateRiskNarrative(result).catch(() => '');
@@ -62,7 +63,7 @@ export async function POST(req: NextRequest) {
       );
 
       const updatedScan = await prisma.scan.update({
-        where: { id: scan.id },
+        where: { id: scanId },
         data: {
           status: 'COMPLETE',
           overallScore: result.overallScore,
@@ -76,7 +77,6 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      // Create findings
       if (result.findings.length > 0) {
         await prisma.scanFinding.createMany({
           data: result.findings.map((f) => ({
@@ -91,12 +91,9 @@ export async function POST(req: NextRequest) {
       }
     } catch (err) {
       console.error('Scan failed:', err);
-      await prisma.scan.update({
-        where: { id: scan.id },
-        data: { status: 'FAILED' },
-      });
+      await prisma.scan.update({ where: { id: scanId }, data: { status: 'FAILED' } }).catch(() => {});
     }
   })();
 
-  return NextResponse.json({ scanId: scan.id }, { status: 202 });
+  return NextResponse.json({ scanId }, { status: 202 });
 }

@@ -60,12 +60,10 @@ export default async function DashboardPage() {
           <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 2 }}>{org?.name ?? 'Your Organisation'}</h2>
           <p style={{ color: '#94a3b8', fontSize: 13, fontFamily: 'ui-monospace, monospace' }}>{org?.domain ?? '—'}</p>
         </div>
-        {org && (
-          <Link href="/dashboard/scan/new" style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 18px', background: '#0ea5e9', color: '#fff', fontWeight: 700, fontSize: 12, borderRadius: 7, textDecoration: 'none', flexShrink: 0, fontFamily: 'ui-monospace, monospace', letterSpacing: .5 }}>
-            <RefreshCw size={13} strokeWidth={2.5} />
-            NEW SCAN /&gt;
-          </Link>
-        )}
+        <Link href="/dashboard/scan/new" style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 18px', background: '#0ea5e9', color: '#fff', fontWeight: 700, fontSize: 12, borderRadius: 7, textDecoration: 'none', flexShrink: 0, fontFamily: 'ui-monospace, monospace', letterSpacing: .5 }}>
+          <RefreshCw size={13} strokeWidth={2.5} />
+          NEW SCAN /&gt;
+        </Link>
       </div>
 
       {/* Score card */}

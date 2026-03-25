@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { signIn } from 'next-auth/react';
@@ -15,7 +15,7 @@ const FEATURES = [
   'Free forever — no credit card required',
 ];
 
-export default function RegisterPage() {
+function RegisterContent() {
   const [form, setForm] = useState({ name: '', email: '', password: '', company: '', domain: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -179,5 +179,13 @@ export default function RegisterPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={null}>
+      <RegisterContent />
+    </Suspense>
   );
 }
