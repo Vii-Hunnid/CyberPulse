@@ -2,10 +2,11 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Shield, Eye } from 'lucide-react';
+import { LayoutDashboard, Shield, Eye, ScanLine } from 'lucide-react';
 
 const NAV = [
   { href: '/dashboard',              label: 'OVERVIEW',  Icon: LayoutDashboard },
+  { href: '/dashboard/scan/new',     label: 'NEW SCAN',  Icon: ScanLine },
   { href: '/dashboard/underwriting', label: 'INSURANCE', Icon: Shield },
   { href: '/dashboard/darkweb',      label: 'DARK WEB',  Icon: Eye },
 ];

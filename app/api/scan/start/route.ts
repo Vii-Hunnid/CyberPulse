@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getSessionOrDev } from '@/lib/dev-session';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
 import { runFullScan } from '@/lib/scanner';
@@ -9,11 +8,10 @@ import { generateRiskNarrative, generateUnderwritingScore } from '@/lib/ai';
 
 const schema = z.object({
   domain: z.string().regex(/^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/, 'Invalid domain format'),
-  orgId: z.string().min(1),
 });
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const session = await getSessionOrDev();
   if (!session) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
   }
@@ -24,7 +22,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { domain, orgId } = parsed.data;
+  const { domain } = parsed.data;
+
+  // Look up or auto-create the org for this user
+  let org = await prisma.organisation.findFirst({
+    where: { userId: session.user.id },
+  });
+  if (!org) {
+    org = await prisma.organisation.create({
+      data: {
+        userId: session.user.id,
+        name: domain,
+        domain,
+      },
+    });
+  }
+  const orgId = org.id;
 
   const scan = await prisma.scan.create({
     data: {
