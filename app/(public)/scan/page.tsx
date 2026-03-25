@@ -361,7 +361,7 @@ export default function FreeScanPage() {
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: i < 2 ? '1px solid #1a2540' : 'none' }}>
               <span style={{ fontSize: 11, fontWeight: 700, background: SEVERITY_COLORS[f.severity], color: '#fff', padding: '2px 8px', borderRadius: 3 }}>{f.severity}</span>
               <span style={{ flex: 1, fontSize: 14 }}>{f.title}</span>
-              <span style={{ fontSize: 18 }}>🔒</span>
+              <Lock size={13} color="#3d4f6b" strokeWidth={1.5} />
             </div>
           ))}
           <p style={{ fontSize: 12, color: '#8892a4', marginTop: 12 }}>Create a free account to unlock full remediation steps</p>
@@ -421,8 +421,8 @@ export default function FreeScanPage() {
               'Downloadable PDF attestation for insurers',
               'Continuous monitoring with instant alerts',
             ].map((item) => (
-              <li key={item} style={{ display: 'flex', gap: 10, marginBottom: 10, color: '#c8d0dd', fontSize: 14 }}>
-                <span style={{ color: '#00ff88' }}>✓</span> {item}
+              <li key={item} style={{ display: 'flex', gap: 10, marginBottom: 10, color: '#c8d0dd', fontSize: 14, alignItems: 'flex-start' }}>
+                <CheckCircle2 size={15} color="#00ff88" strokeWidth={2} style={{ flexShrink: 0, marginTop: 1 }} /> {item}
               </li>
             ))}
           </ul>
@@ -461,8 +461,9 @@ export default function FreeScanPage() {
             </form>
           </div>
         ) : (
-          <div style={{ background: '#0d2e1a', border: '1px solid #00ff8833', borderRadius: 12, padding: 20, textAlign: 'center' }}>
-            <span style={{ color: '#00ff88' }}>✓ Report sent! Check your inbox.</span>
+          <div style={{ background: '#0d2e1a', border: '1px solid rgba(0,255,136,0.2)', borderRadius: 12, padding: 20, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <CheckCircle2 size={16} color="#00ff88" strokeWidth={2} />
+            <span style={{ color: '#00ff88', fontSize: 14 }}>Report sent! Check your inbox.</span>
           </div>
         )}
       </div>

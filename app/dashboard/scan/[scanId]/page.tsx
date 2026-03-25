@@ -56,63 +56,72 @@ export default function ScanDetailPage() {
     });
   };
 
-  if (loading) return <div className="p-8 text-white">Loading scan...</div>;
-  if (!scan) return <div className="p-8" style={{ color: '#ff3366' }}>Scan not found.</div>;
+  if (loading) return (
+    <div style={{ padding: 32, color: '#8892a4', display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>
+      <div style={{ width: 16, height: 16, border: '2px solid #1a2540', borderTopColor: '#00d4ff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+      Loading scan...
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+  if (!scan) return (
+    <div style={{ padding: 32, color: '#ff3366', fontSize: 14 }}>Scan not found or access denied.</div>
+  );
 
   const categories = [...new Set(scan.findings.map((f) => f.category))];
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
+    <div style={{ padding: 32, fontFamily: 'system-ui, sans-serif' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 28, gap: 16 }}>
         <div>
-          <h2 className="text-2xl font-bold text-white">Scan Results</h2>
-          <p className="text-sm mt-1" style={{ color: '#8892a4' }}>
+          <h2 style={{ fontSize: 22, fontWeight: 700, color: '#ffffff', marginBottom: 4 }}>Scan Results</h2>
+          <p style={{ fontSize: 12, color: '#3d4f6b' }}>
             {scan.completedAt ? new Date(scan.completedAt).toLocaleString('en-ZA') : 'In progress...'}
           </p>
         </div>
         <a
           href={`/api/org/attestation/report/${scanId}`}
-          className="px-6 py-3 rounded font-semibold text-sm"
-          style={{ background: '#00ff88', color: '#0a0f1e' }}
+          style={{ padding: '10px 20px', background: '#00ff88', color: '#0a0f1e', fontWeight: 700, fontSize: 13, borderRadius: 8, textDecoration: 'none', flexShrink: 0 }}
         >
           Download PDF Report
         </a>
       </div>
 
       {scan.overallScore != null && (
-        <div className="rounded-xl p-6 mb-8 flex items-center gap-6" style={{ background: '#0f1729', border: '1px solid #1a2540' }}>
-          <div className="text-5xl font-bold" style={{ color: '#00d4ff' }}>{scan.overallScore}</div>
+        <div style={{ background: '#0f1729', border: '1px solid #1a2540', borderRadius: 12, padding: '22px 24px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 20 }}>
+          <div style={{ fontSize: 52, fontWeight: 800, color: '#00d4ff', lineHeight: 1, letterSpacing: '-2px', flexShrink: 0 }}>{scan.overallScore}</div>
+          <div style={{ width: 1, height: 48, background: '#1a2540' }} />
           <div>
-            <div className="text-3xl font-bold text-white">Grade {scan.grade}</div>
-            <p className="text-sm mt-2" style={{ color: '#8892a4' }}>{scan.aiNarrative?.slice(0, 200)}...</p>
+            <div style={{ fontSize: 26, fontWeight: 700, color: '#ffffff', marginBottom: 6 }}>Grade {scan.grade}</div>
+            <p style={{ fontSize: 13, color: '#8892a4', lineHeight: 1.5, maxWidth: 500 }}>{scan.aiNarrative?.slice(0, 220)}...</p>
           </div>
         </div>
       )}
 
       {categories.map((cat) => (
-        <div key={cat} className="mb-6">
-          <h3 className="text-sm font-bold mb-3 uppercase tracking-wider" style={{ color: '#00d4ff' }}>
+        <div key={cat} style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: '#00d4ff', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
             {cat.replace(/_/g, ' ')}
-          </h3>
-          <div className="space-y-2">
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {scan.findings.filter((f) => f.category === cat).map((finding) => (
-              <div key={finding.id} className="rounded-lg overflow-hidden" style={{ background: '#0f1729', border: '1px solid #1a2540' }}>
+              <div key={finding.id} style={{ background: '#0f1729', border: '1px solid #1a2540', borderRadius: 8, overflow: 'hidden' }}>
                 <button
                   onClick={() => toggle(finding.id)}
-                  className="w-full text-left flex items-center justify-between p-4 hover:bg-white/5"
+                  style={{ width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 16px', background: 'transparent', border: 'none', cursor: 'pointer' }}
                 >
-                  <div className="flex items-center gap-3">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <SeverityBadge severity={finding.severity} />
-                    <span className="text-white text-sm font-medium">{finding.title}</span>
+                    <span style={{ color: '#e2e8f0', fontSize: 13, fontWeight: 500 }}>{finding.title}</span>
                   </div>
-                  <span style={{ color: '#8892a4' }}>{expanded.has(finding.id) ? '▲' : '▼'}</span>
+                  <span style={{ color: '#3d4f6b', fontSize: 10 }}>{expanded.has(finding.id) ? '▲' : '▼'}</span>
                 </button>
                 {expanded.has(finding.id) && (
-                  <div className="px-4 pb-4" style={{ borderTop: '1px solid #1a2540' }}>
-                    <p className="text-sm mt-3 mb-3" style={{ color: '#c8d0dd' }}>{finding.description}</p>
+                  <div style={{ padding: '0 16px 16px', borderTop: '1px solid #1a2540' }}>
+                    <p style={{ fontSize: 13, color: '#c8d0dd', margin: '12px 0', lineHeight: 1.6 }}>{finding.description}</p>
                     {finding.remediation && (
-                      <div className="rounded p-3 text-sm" style={{ background: '#141d30', color: '#00ff88' }}>
-                        <strong>Fix:</strong> {finding.remediation}
+                      <div style={{ background: '#141d30', borderRadius: 6, padding: '10px 14px', borderLeft: '3px solid #00ff88' }}>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: '#00ff88' }}>FIX: </span>
+                        <span style={{ fontSize: 13, color: '#c8d0dd' }}>{finding.remediation}</span>
                       </div>
                     )}
                   </div>

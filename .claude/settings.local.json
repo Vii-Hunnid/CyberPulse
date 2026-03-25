@@ -21,7 +21,22 @@
       "WebFetch(domain:scca-black.vercel.app)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "Bash(gh repo:*)"
+      "Bash(gh repo:*)",
+      "Bash(grep -rn [u{1F000}-u{1FFFF}] --include=*.tsx --include=*.ts -l)",
+      "Bash(grep -Prn [^x00-x7F] app/ lib/ --include=*.tsx --include=*.ts -l)",
+      "Bash(nslookup -type=TXT krostshelving.com 8.8.8.8)",
+      "Bash(nslookup -type=TXT _dmarc.krostshelving.com 8.8.8.8)",
+      "Bash(nslookup -type=MX krostshelving.com 8.8.8.8)",
+      "Bash(curl -sI https://krostshelving.com)",
+      "Bash(curl -sI https://www.krostshelving.com)",
+      "Bash(nslookup -type=TXT za._netblocks.mimecast.com 8.8.8.8)",
+      "Bash(nslookup -type=TXT spf-za.rocketseed.com 8.8.8.8)",
+      "WebFetch(domain:www.krostshelving.com)",
+      "WebFetch(domain:mxtoolbox.com)",
+      "Bash(nslookup -type=TXT cyberpulse.co.za 8.8.8.8)",
+      "Bash(nslookup -type=TXT _dmarc.cyberpulse.co.za 8.8.8.8)",
+      "Bash(nslookup -type=MX cyberpulse.co.za 8.8.8.8)",
+      "Bash(npm run:*)"
     ]
   }
 }
