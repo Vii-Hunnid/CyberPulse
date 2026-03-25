@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -82,7 +82,7 @@ function MarkdownBlock({ text }: { text: string }) {
   return <div>{elements}</div>;
 }
 
-export default function FreeScanPage() {
+function ScanContent() {
   const searchParams = useSearchParams();
   const [domain, setDomain] = useState(searchParams.get('domain') ?? '');
   const [step, setStep] = useState<'input' | 'scanning' | 'result'>('input');
@@ -517,5 +517,13 @@ export default function FreeScanPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function FreeScanPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: 48, textAlign: 'center', color: '#94a3b8', fontFamily: 'ui-monospace, monospace', fontSize: 13 }}>Loading scanner...</div>}>
+      <ScanContent />
+    </Suspense>
   );
 }
