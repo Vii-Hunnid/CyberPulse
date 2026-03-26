@@ -908,13 +908,14 @@ export async function POST(req: NextRequest) {
     }
 
     const buffer = await renderToBuffer(<FullReport data={data} />);
+    const uint8 = new Uint8Array(buffer);
 
-    return new NextResponse(buffer, {
+    return new NextResponse(uint8, {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="cyberpulse-full-report-${data.domain}.pdf"`,
-        'Content-Length': buffer.length.toString(),
+        'Content-Length': uint8.byteLength.toString(),
       },
     });
   } catch (err) {
