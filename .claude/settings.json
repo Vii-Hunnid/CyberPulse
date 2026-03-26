@@ -10,7 +10,8 @@
       "Bash(npx tsc --noEmit)",
       "Bash(npm install *)",
       "Bash(npm install)",
-      "Bash(curl -s -X POST http://localhost:3000/api/scan/free/pdf -H \"Content-Type: application/json\" -d '{\"\"domain\"\":\"\"test.com\"\",\"\"overallScore\"\":75,\"\"grade\"\":\"\"B\"\",\"\"categoryResults\"\":[{\"\"category\"\":\"\"SSL_TLS\"\",\"\"status\"\":\"\"pass\"\",\"\"summary\"\":\"\"OK\"\"}],\"\"top3Findings\"\":[{\"\"title\"\":\"\"Test finding\"\",\"\"severity\"\":\"\"HIGH\"\"}],\"\"darkWebBreachCount\"\":0,\"\"underwritingGrade\"\":\"\"B\"\",\"\"narrative\"\":\"\"Test narrative\"\"}' -o /tmp/test.pdf -w \"%{http_code}\")"
+      "Bash(curl -s -X POST http://localhost:3000/api/scan/free/pdf -H \"Content-Type: application/json\" -d '{\"\"domain\"\":\"\"test.com\"\",\"\"overallScore\"\":75,\"\"grade\"\":\"\"B\"\",\"\"categoryResults\"\":[{\"\"category\"\":\"\"SSL_TLS\"\",\"\"status\"\":\"\"pass\"\",\"\"summary\"\":\"\"OK\"\"}],\"\"top3Findings\"\":[{\"\"title\"\":\"\"Test finding\"\",\"\"severity\"\":\"\"HIGH\"\"}],\"\"darkWebBreachCount\"\":0,\"\"underwritingGrade\"\":\"\"B\"\",\"\"narrative\"\":\"\"Test narrative\"\"}' -o /tmp/test.pdf -w \"%{http_code}\")",
+      "Bash(xargs grep:*)"
     ],
     "deny": [
       "Bash(rm -rf /)",

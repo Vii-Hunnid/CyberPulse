@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Search, Loader2, CheckCircle2, XCircle, AlertTriangle,
   Shield, ChevronDown, ChevronUp, Download, RefreshCw,
@@ -50,78 +50,214 @@ function shortHash(s: string): string {
 }
 
 /* ─── Merkle chain component ────────────────────────────────── */
-function MerkleChain({ result }: { result: { domain: string; overallScore: number; grade: string; categoryScores: { category: string; score: number; status: string }[]; findings: { severity: string }[] } }) {
+function MerkleChain({
+  result,
+  epData,
+}: {
+  result: { domain: string; overallScore: number; grade: string; categoryScores: { category: string; score: number; status: string }[]; findings: { severity: string }[] };
+  epData?: EndpointResult | null;
+}) {
   const CAT_LABEL: Record<string, string> = {
     DNS_EMAIL: 'Email Security', SSL_TLS: 'SSL / TLS', HTTP_HEADERS: 'HTTP Headers',
-    OPEN_PORTS: 'Open Ports', CVE_EXPOSURE: 'CVEs', BACKUP_HYGIENE: 'Backups', DARK_WEB: 'Dark Web',
+    OPEN_PORTS: 'Open Ports', CVE_EXPOSURE: 'CVEs', DARK_WEB: 'Dark Web',
   };
-  const rootInput = `${result.domain}:${result.overallScore}:${result.grade}`;
-  const rootHash = shortHash(rootInput);
-  const catHashes = result.categoryScores.map((c) => ({
+  const EP_TYPE_LABEL: Record<string, string> = {
+    page: 'PAGE', api: 'API', auth: 'AUTH', admin: 'ADMIN', sensitive: 'SENSITIVE', wellknown: 'WELL-KNOWN',
+  };
+
+  // ── Build deterministic hashes ──
+  const rootInput  = `${result.domain}:${result.overallScore}:${result.grade}`;
+  const rootHash   = shortHash(rootInput);
+
+  // Security branch hash = hash of all category hashes combined
+  const catHashes  = result.categoryScores.map((c) => ({
     ...c,
-    hash: shortHash(`${rootHash}:${c.category}:${c.score}`),
+    hash: shortHash(`${rootHash}:SEC:${c.category}:${c.score}`),
   }));
+  const secBranchHash = shortHash(catHashes.map((c) => c.hash).join(''));
+
+  // Endpoint branch hash = hash of all probed paths + statuses
+  const epNodes = epData
+    ? epData.probed.map((ep) => ({
+        path:     ep.path,
+        type:     ep.type,
+        status:   ep.status,
+        isExposed: ep.isExposed,
+        statusCode: ep.statusCode,
+        hash: shortHash(`${rootHash}:EP:${ep.path}:${ep.status}`),
+      }))
+    : [];
+  const epBranchHash = epNodes.length > 0
+    ? shortHash(epNodes.map((e) => e.hash).join(''))
+    : null;
+
   const statusCol = (s: string) => s === 'pass' ? '#10b981' : s === 'warn' ? '#f59e0b' : '#ef4444';
+  const epStatusCol = (ep: { status: string; isExposed: boolean }) => {
+    if (ep.isExposed)              return '#ef4444';
+    if (ep.status === 'public')    return '#f59e0b';
+    if (ep.status === 'protected') return '#10b981';
+    return '#94a3b8';
+  };
+  const epStatusLabel = (ep: { status: string; isExposed: boolean }) => {
+    if (ep.isExposed)              return 'EXPOSED';
+    if (ep.status === 'public')    return 'PUBLIC';
+    if (ep.status === 'protected') return 'PROTECTED';
+    if (ep.status === 'not-found') return '404';
+    return 'ERROR';
+  };
+
+  // Group endpoints by type for display
+  const EP_TYPES = ['page', 'api', 'auth', 'admin', 'sensitive', 'wellknown'];
+  const epByType = EP_TYPES.reduce<Record<string, typeof epNodes>>((acc, t) => {
+    acc[t] = epNodes.filter((e) => e.type === t && e.status !== 'not-found' && e.status !== 'error').slice(0, 6);
+    return acc;
+  }, {});
 
   return (
     <div style={{ background: '#ffffff', borderRadius: 12, padding: '20px 24px', border: '1px solid #dde3ec' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
         <GitBranch size={14} color="#0ea5e9" strokeWidth={1.5} />
         <h3 className="mono" style={{ fontSize: 11, fontWeight: 600, color: '#64748b', letterSpacing: 1 }}>[ MERKLE INTEGRITY CHAIN ]</h3>
       </div>
       <p style={{ fontSize: 12, color: '#94a3b8', marginBottom: 20 }}>
-        Deterministic hash tree proving the scan result has not been tampered with. Each node hashes its parent + category data.
+        Tamper-proof hash tree of every discovered asset — security categories, pages, API routes, auth endpoints, and sensitive paths all feed into the root hash.
       </p>
 
-      {/* Root node */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 8 }}>
-        <div style={{ background: '#0c1220', borderRadius: 10, padding: '12px 20px', textAlign: 'center', minWidth: 240 }}>
+      {/* ── Root node ── */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 4 }}>
+        <div style={{ background: '#0c1220', borderRadius: 10, padding: '12px 20px', textAlign: 'center', minWidth: 260 }}>
           <div className="mono" style={{ fontSize: 9, color: '#0ea5e9', letterSpacing: 1.5, marginBottom: 4 }}>ROOT · INTEGRITY ANCHOR</div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#f8fafc' }}>{result.domain}</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: '#f8fafc' }}>{result.domain}</div>
           <div className="mono" style={{ fontSize: 10, color: '#475569', marginTop: 4 }}>{rootHash}</div>
         </div>
-        <div style={{ width: 2, height: 20, background: '#dde3ec' }} />
+        {/* Vertical connector */}
+        <div style={{ width: 2, height: 16, background: '#dde3ec' }} />
+        {/* Branch split line */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', width: '100%', justifyContent: 'center', gap: 0 }}>
+          <div style={{ flex: 1, height: 2, background: '#dde3ec', marginTop: 0, alignSelf: 'center' }} />
+          <div style={{ width: 2, height: 16, background: '#dde3ec' }} />
+          <div style={{ flex: 1, height: 2, background: epBranchHash ? '#dde3ec' : 'transparent', marginTop: 0, alignSelf: 'center' }} />
+        </div>
       </div>
 
-      {/* Category leaf nodes */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 8 }}>
-        {catHashes.map((c) => {
-          const col = statusCol(c.status);
-          return (
-            <div key={c.category} style={{ borderRadius: 8, border: `1px solid ${col}22`, background: `${col}08`, padding: '10px 12px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                <div style={{ width: 6, height: 6, borderRadius: '50%', background: col, flexShrink: 0 }} />
-                <span style={{ fontSize: 11, fontWeight: 600, color: '#0f172a' }}>{CAT_LABEL[c.category] ?? c.category}</span>
-              </div>
-              <div className="mono" style={{ fontSize: 9, color: col, marginBottom: 3 }}>{c.status.toUpperCase()} · {c.score}/100</div>
-              <div className="mono" style={{ fontSize: 8, color: '#94a3b8', wordBreak: 'break-all' }}>{c.hash}</div>
+      {/* ── Two branch columns ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: epBranchHash ? '1fr 1fr' : '1fr', gap: 14, marginBottom: 12 }}>
+
+        {/* ── Security branch ── */}
+        <div>
+          {/* Branch node */}
+          <div style={{ background: '#1e293b', borderRadius: 8, padding: '8px 14px', textAlign: 'center', marginBottom: 8 }}>
+            <div className="mono" style={{ fontSize: 8, color: '#94a3b8', letterSpacing: 1, marginBottom: 3 }}>SECURITY ANALYSIS</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#f8fafc' }}>{result.categoryScores.length} categories</div>
+            <div className="mono" style={{ fontSize: 9, color: '#475569', marginTop: 3 }}>{secBranchHash}</div>
+          </div>
+          <div style={{ width: 2, height: 12, background: '#dde3ec', margin: '0 auto 8px' }} />
+          {/* Category leaves */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            {catHashes.map((c) => {
+              const col = statusCol(c.status);
+              return (
+                <div key={c.category} style={{ borderRadius: 7, border: `1px solid ${col}33`, background: `${col}08`, padding: '7px 10px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: col, flexShrink: 0 }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: '#0f172a' }}>{CAT_LABEL[c.category] ?? c.category}</div>
+                    <div className="mono" style={{ fontSize: 8, color: col }}>{c.status.toUpperCase()} · {c.score}/100</div>
+                  </div>
+                  <div className="mono" style={{ fontSize: 8, color: '#94a3b8' }}>{c.hash}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ── Endpoint branch ── */}
+        {epBranchHash && (
+          <div>
+            {/* Branch node */}
+            <div style={{ background: '#1e293b', borderRadius: 8, padding: '8px 14px', textAlign: 'center', marginBottom: 8 }}>
+              <div className="mono" style={{ fontSize: 8, color: '#94a3b8', letterSpacing: 1, marginBottom: 3 }}>ENDPOINT DISCOVERY</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#f8fafc' }}>{epNodes.length} paths probed</div>
+              <div className="mono" style={{ fontSize: 9, color: '#475569', marginTop: 3 }}>{epBranchHash}</div>
             </div>
-          );
-        })}
+            <div style={{ width: 2, height: 12, background: '#dde3ec', margin: '0 auto 8px' }} />
+            {/* Endpoint type groups */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+              {EP_TYPES.map((type) => {
+                const nodes = epByType[type];
+                if (nodes.length === 0) return null;
+                const typeHash = shortHash(`${epBranchHash}:${type}`);
+                const hasExposed = nodes.some((n) => n.isExposed);
+                const typeCol = hasExposed ? '#ef4444' : '#0ea5e9';
+                return (
+                  <div key={type} style={{ borderRadius: 7, border: `1px solid ${typeCol}33`, background: `${typeCol}08`, padding: '7px 10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: typeCol, flexShrink: 0 }} />
+                        <span className="mono" style={{ fontSize: 9, fontWeight: 700, color: typeCol, letterSpacing: .5 }}>
+                          {EP_TYPE_LABEL[type] ?? type.toUpperCase()}
+                        </span>
+                        {hasExposed && <span className="mono" style={{ fontSize: 8, color: '#ef4444', fontWeight: 700 }}>⚠ EXPOSED</span>}
+                      </div>
+                      <span className="mono" style={{ fontSize: 8, color: '#94a3b8' }}>{typeHash.slice(0, 6)}</span>
+                    </div>
+                    {nodes.map((ep, i) => {
+                      const ec = epStatusCol(ep);
+                      return (
+                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 0', borderTop: i > 0 ? '1px solid #dde3ec55' : 'none' }}>
+                          <span className="mono" style={{ fontSize: 9, color: '#334155', flex: 1 }}>{ep.path}</span>
+                          <span style={{ fontSize: 8, fontWeight: 700, color: ec, background: `${ec}18`, borderRadius: 3, padding: '1px 5px', fontFamily: 'ui-monospace, monospace' }}>
+                            {epStatusLabel(ep)}
+                          </span>
+                          <span className="mono" style={{ fontSize: 8, color: '#94a3b8' }}>{ep.hash.slice(0, 5)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+              {/* Sitemap pages summary */}
+              {epData && epData.sitemapPages.length > 0 && (
+                <div style={{ borderRadius: 7, border: '1px solid #0ea5e933', background: '#0ea5e908', padding: '7px 10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#0ea5e9', flexShrink: 0 }} />
+                    <span className="mono" style={{ fontSize: 9, fontWeight: 700, color: '#0ea5e9', letterSpacing: .5 }}>SITEMAP</span>
+                    <span className="mono" style={{ fontSize: 8, color: '#94a3b8', marginLeft: 'auto' }}>{shortHash(`${epBranchHash}:sitemap`).slice(0, 6)}</span>
+                  </div>
+                  <div style={{ fontSize: 9, color: '#334155' }}>
+                    {epData.sitemapPages.length} pages indexed — {epData.sitemapPages.slice(0, 3).map((p) => {
+                      try { return new URL(p).pathname; } catch { return p; }
+                    }).join(', ')}{epData.sitemapPages.length > 3 ? ` +${epData.sitemapPages.length - 3} more` : ''}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Leaf count */}
-      <div style={{ display: 'flex', gap: 20, padding: '10px 14px', background: '#f8fafc', borderRadius: 8, marginTop: 8 }}>
-        <div>
-          <span className="mono" style={{ fontSize: 10, color: '#64748b' }}>FINDINGS HASHED: </span>
-          <span className="mono" style={{ fontSize: 10, fontWeight: 700, color: '#0f172a' }}>{result.findings.length}</span>
-        </div>
-        <div>
-          <span className="mono" style={{ fontSize: 10, color: '#64748b' }}>CATEGORIES: </span>
-          <span className="mono" style={{ fontSize: 10, fontWeight: 700, color: '#0f172a' }}>{result.categoryScores.length}</span>
-        </div>
-        <div>
-          <span className="mono" style={{ fontSize: 10, color: '#64748b' }}>ROOT HASH: </span>
-          <span className="mono" style={{ fontSize: 10, fontWeight: 700, color: '#0ea5e9' }}>{rootHash}</span>
-        </div>
+      {/* ── Footer stats ── */}
+      <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', padding: '10px 14px', background: '#f8fafc', borderRadius: 8 }}>
+        {[
+          { label: 'FINDINGS HASHED', val: String(result.findings.length), col: '#0f172a' },
+          { label: 'CATEGORIES',      val: String(result.categoryScores.length), col: '#0f172a' },
+          { label: 'ENDPOINTS',       val: epNodes.length > 0 ? String(epNodes.length) : '—', col: '#0ea5e9' },
+          { label: 'SITEMAP PAGES',   val: epData ? String(epData.sitemapPages.length) : '—', col: '#0ea5e9' },
+          { label: 'EXPOSED',         val: epData ? String(epData.summary.exposed) : '—', col: epData && epData.summary.exposed > 0 ? '#ef4444' : '#10b981' },
+          { label: 'ROOT HASH',       val: rootHash, col: '#0ea5e9' },
+        ].map(({ label, val, col }) => (
+          <div key={label}>
+            <span className="mono" style={{ fontSize: 10, color: '#64748b' }}>{label}: </span>
+            <span className="mono" style={{ fontSize: 10, fontWeight: 700, color: col }}>{val}</span>
+          </div>
+        ))}
       </div>
     </div>
   );
 }
 
 /* ─── Endpoint panel component ──────────────────────────────── */
-function EndpointPanel({ domain }: { domain: string }) {
-  const [state, setState] = useState<'idle'|'loading'|'done'|'error'>('idle');
+function EndpointPanel({ domain, onData }: { domain: string; onData?: (d: EndpointResult) => void }) {
+  const [state, setState] = useState<'loading'|'done'|'error'>('loading');
   const [data, setData] = useState<EndpointResult | null>(null);
   const [filter, setFilter] = useState<string>('all');
 
@@ -134,10 +270,14 @@ function EndpointPanel({ domain }: { domain: string }) {
         body: JSON.stringify({ domain }),
       });
       if (!res.ok) { setState('error'); return; }
-      setData(await res.json());
+      const d = await res.json();
+      setData(d);
+      onData?.(d);
       setState('done');
     } catch { setState('error'); }
   }
+
+  useEffect(() => { run(); }, [domain]);
 
   const TYPE_FILTERS = ['all', 'page', 'api', 'auth', 'admin', 'sensitive', 'wellknown'];
   const filtered = data?.probed.filter((e) => filter === 'all' || e.type === filter) ?? [];
@@ -157,25 +297,19 @@ function EndpointPanel({ domain }: { domain: string }) {
           <Globe size={14} color="#0ea5e9" strokeWidth={1.5} />
           <h3 className="mono" style={{ fontSize: 11, fontWeight: 600, color: '#64748b', letterSpacing: 1 }}>[ ENDPOINT & PAGE DISCOVERY ]</h3>
         </div>
-        {state === 'idle' && (
-          <button onClick={run} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 16px', background: '#0ea5e9', color: '#fff', fontWeight: 700, fontSize: 11, borderRadius: 7, border: 'none', cursor: 'pointer', fontFamily: 'ui-monospace, monospace', letterSpacing: .5 }}>
-            <Search size={12} /> DISCOVER ENDPOINTS /&gt;
-          </button>
-        )}
         {state === 'loading' && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, color: '#94a3b8' }}>
             <Loader2 size={13} className="spin" /> Probing {domain}…
           </div>
         )}
         {state === 'error' && (
-          <button onClick={run} style={{ fontSize: 11, color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}>Retry</button>
+          <button onClick={run} style={{ fontSize: 11, color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}>↺ Retry</button>
         )}
       </div>
 
-      {state === 'idle' && (
+      {state === 'loading' && (
         <p style={{ fontSize: 13, color: '#94a3b8' }}>
-          Probe pages, API routes, admin panels, authentication endpoints, and sensitive paths on <strong style={{ color: '#0f172a' }}>{domain}</strong>.
-          Classifies each as public, protected, exposed, or not found.
+          Probing pages, API routes, admin panels, auth endpoints, and sensitive paths on <strong style={{ color: '#0f172a' }}>{domain}</strong>…
         </p>
       )}
 
@@ -258,7 +392,7 @@ const SEV_BG: Record<string, string>    = { CRITICAL: '#fef2f2', HIGH: '#fff7ed'
 const SEV_ORDER = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFO'];
 const CAT_LABEL: Record<string, string> = {
   DNS_EMAIL: 'Email Security', SSL_TLS: 'SSL / TLS', HTTP_HEADERS: 'Security Headers',
-  OPEN_PORTS: 'Open Ports', CVE_EXPOSURE: 'Vulnerabilities', BACKUP_HYGIENE: 'Backup Hygiene', DARK_WEB: 'Dark Web',
+  OPEN_PORTS: 'Open Ports', CVE_EXPOSURE: 'Vulnerabilities', DARK_WEB: 'Dark Web',
 };
 const STAGES = [
   'Resolving DNS & SSL certificates …',
@@ -326,29 +460,46 @@ export default function NewScanPage() {
   const [result, setResult]   = useState<LiveResult | null>(null);
   const [sevFilter, setSevFilter] = useState<string | null>(null);
   const [pdfLoading, setPdfLoading] = useState(false);
+  const [epData, setEpData] = useState<EndpointResult | null>(null);
 
   async function downloadPdf() {
     if (!result) return;
     setPdfLoading(true);
     try {
+      // Merkle hashes computed client-side (same as MerkleChain component)
+      const rootInput = `${result.domain}:${result.overallScore}:${result.grade}`;
+      const rootHash = shortHash(rootInput);
+      const merkle = {
+        rootHash,
+        categories: result.categoryScores.map((c) => ({
+          category: c.category,
+          score: c.score,
+          status: c.status,
+          hash: shortHash(`${rootHash}:SEC:${c.category}:${c.score}`),
+        })),
+        endpoints: epData ? epData.probed.map((ep) => ({
+          path: ep.path,
+          type: ep.type,
+          status: ep.status,
+          isExposed: ep.isExposed,
+          hash: shortHash(`${rootHash}:EP:${ep.path}:${ep.status}`),
+        })) : [],
+        sitemapPages: epData?.sitemapPages ?? [],
+      };
+
       const payload = {
         domain: result.domain,
         overallScore: result.overallScore,
         grade: result.grade,
-        categoryResults: result.categoryScores.map((c) => ({
-          category: c.category,
-          status: c.status,
-          summary: c.score >= 80 ? 'No issues detected' : c.score >= 50 ? 'Some issues found' : 'Critical issues found',
-        })),
-        top3Findings: result.findings
-          .sort((a, b) => SEV_ORDER.indexOf(a.severity) - SEV_ORDER.indexOf(b.severity))
-          .slice(0, 3)
-          .map((f) => ({ title: f.title, severity: f.severity })),
-        darkWebBreachCount: result.darkWebResults?.length ?? 0,
-        underwritingGrade: result.underwriting?.insurabilityGrade ?? result.grade,
+        categoryScores: result.categoryScores,
+        findings: result.findings.sort((a, b) => SEV_ORDER.indexOf(a.severity) - SEV_ORDER.indexOf(b.severity)),
         narrative: result.narrative,
+        underwriting: result.underwriting ?? null,
+        darkWebResults: result.darkWebResults ?? [],
+        endpoints: epData,
+        merkle,
       };
-      const res = await fetch('/api/scan/free/pdf', {
+      const res = await fetch('/api/scan/full-pdf', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -358,7 +509,7 @@ export default function NewScanPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `cyberpulse-report-${result.domain}.pdf`;
+      a.download = `cyberpulse-full-report-${result.domain}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     } catch { /* silent */ }
@@ -546,7 +697,41 @@ export default function NewScanPage() {
                 <Shield size={14} color="#0ea5e9" strokeWidth={1.5} />
                 <h3 className="mono" style={{ fontSize: 11, fontWeight: 600, color: '#64748b', letterSpacing: 1 }}>[ AI RISK NARRATIVE ]</h3>
               </div>
-              <p style={{ fontSize: 13, color: '#334155', lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>{result.narrative}</p>
+              <div style={{ fontSize: 13, color: '#334155', lineHeight: 1.75 }}>
+                {result.narrative.split('\n').map((line, i) => {
+                  const t = line.trim();
+                  if (!t) return <div key={i} style={{ height: 6 }} />;
+                  const stripBold = (s: string) => {
+                    const parts = s.split(/\*\*([^*]+)\*\*/g);
+                    return parts.map((p, j) => j % 2 === 1
+                      ? <strong key={j} style={{ color: '#0f172a', fontWeight: 700 }}>{p}</strong>
+                      : p
+                    );
+                  };
+                  if (/^## /.test(t)) return (
+                    <div key={i} style={{ fontSize: 15, fontWeight: 700, color: gc(result.grade), marginTop: 16, marginBottom: 6 }}>
+                      {stripBold(t.replace(/^## /, ''))}
+                    </div>
+                  );
+                  if (/^### /.test(t)) return (
+                    <div key={i} style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', marginTop: 12, marginBottom: 4 }}>
+                      {stripBold(t.replace(/^### /, ''))}
+                    </div>
+                  );
+                  if (/^# /.test(t)) return (
+                    <div key={i} style={{ fontSize: 16, fontWeight: 800, color: gc(result.grade), marginTop: 16, marginBottom: 8 }}>
+                      {stripBold(t.replace(/^# /, ''))}
+                    </div>
+                  );
+                  if (/^[-*] /.test(t)) return (
+                    <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 4, paddingLeft: 4 }}>
+                      <span style={{ color: gc(result.grade), flexShrink: 0, marginTop: 2 }}>•</span>
+                      <span>{stripBold(t.replace(/^[-*] /, ''))}</span>
+                    </div>
+                  );
+                  return <p key={i} style={{ margin: '0 0 6px 0' }}>{stripBold(t)}</p>;
+                })}
+              </div>
             </div>
           )}
 
@@ -653,10 +838,10 @@ export default function NewScanPage() {
           )}
 
           {/* Endpoint & Page Discovery */}
-          <EndpointPanel domain={result.domain} />
+          <EndpointPanel domain={result.domain} onData={setEpData} />
 
           {/* Merkle Integrity Chain */}
-          <MerkleChain result={result} />
+          <MerkleChain result={result} epData={epData} />
 
         </div>
       )}

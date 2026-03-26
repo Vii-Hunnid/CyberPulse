@@ -3,17 +3,17 @@ import { checkSslTls } from './ssl-tls';
 import { checkHttpHeaders } from './http-headers';
 import { checkOpenPorts } from './open-ports';
 import { checkCveExposure } from './cve-exposure';
-import { checkBackupHygiene, type BackupHygieneData } from './backup-hygiene';
 import { checkDomainBreaches } from '../ai/darkweb';
 import type { ScanResult, FindingResult, CategoryScore } from '../../types';
 
+// Backup hygiene removed — cannot be detected via external scan.
+// Weights rebalanced across the 5 detectable categories.
 const WEIGHTS = {
-  DNS_EMAIL: 0.20,
-  SSL_TLS: 0.20,
-  HTTP_HEADERS: 0.15,
-  OPEN_PORTS: 0.25,
-  CVE_EXPOSURE: 0.15,
-  BACKUP_HYGIENE: 0.05,
+  DNS_EMAIL:    0.25,
+  SSL_TLS:      0.25,
+  HTTP_HEADERS: 0.20,
+  OPEN_PORTS:   0.20,
+  CVE_EXPOSURE: 0.10,
 };
 
 function calculateGrade(score: number): string {
@@ -29,19 +29,11 @@ type ProgressCallback = (event: string, data: unknown) => void;
 export async function runFullScan(
   domain: string,
   organisationId: string,
-  backupData?: BackupHygieneData,
   onProgress?: ProgressCallback
 ): Promise<ScanResult> {
   onProgress?.('scan:started', { domain, organisationId });
 
-  const defaultBackupData: BackupHygieneData = backupData ?? {
-    lastBackupDate: null,
-    isOffsite: false,
-    restorationTested: false,
-    hasAutomatedBackups: false,
-  };
-
-  const [dnsResult, sslResult, headersResult, portsResult, cveResult, backupResult, darkWebResult] =
+  const [dnsResult, sslResult, headersResult, portsResult, cveResult, darkWebResult] =
     await Promise.allSettled([
       checkDnsEmail(domain).then((r) => {
         onProgress?.('scan:progress', { category: 'DNS_EMAIL', status: 'complete' });
@@ -63,10 +55,6 @@ export async function runFullScan(
         onProgress?.('scan:progress', { category: 'CVE_EXPOSURE', status: 'complete' });
         return r;
       }),
-      checkBackupHygiene(defaultBackupData).then((r) => {
-        onProgress?.('scan:progress', { category: 'BACKUP_HYGIENE', status: 'complete' });
-        return r;
-      }),
       checkDomainBreaches(domain).then((r) => {
         onProgress?.('scan:progress', { category: 'DARK_WEB', status: 'complete' });
         return r;
@@ -76,21 +64,19 @@ export async function runFullScan(
   const getResult = <T>(result: PromiseSettledResult<T>, fallback: T): T =>
     result.status === 'fulfilled' ? result.value : fallback;
 
-  const dns = getResult(dnsResult, { score: 0, findings: [] as FindingResult[] });
-  const ssl = getResult(sslResult, { score: 0, findings: [] as FindingResult[] });
+  const dns     = getResult(dnsResult,     { score: 0, findings: [] as FindingResult[] });
+  const ssl     = getResult(sslResult,     { score: 0, findings: [] as FindingResult[] });
   const headers = getResult(headersResult, { score: 0, findings: [] as FindingResult[] });
-  const ports = getResult(portsResult, { score: 0, findings: [] as FindingResult[] });
-  const cve = getResult(cveResult, { score: 0, findings: [] as FindingResult[] });
-  const backup = getResult(backupResult, { score: 0, findings: [] as FindingResult[] });
+  const ports   = getResult(portsResult,   { score: 0, findings: [] as FindingResult[] });
+  const cve     = getResult(cveResult,     { score: 0, findings: [] as FindingResult[] });
   const darkWeb = getResult(darkWebResult, []);
 
   const categoryScores: CategoryScore[] = [
-    { category: 'DNS_EMAIL', score: dns.score, weight: WEIGHTS.DNS_EMAIL, status: dns.score >= 80 ? 'pass' : dns.score >= 50 ? 'warn' : 'fail' },
-    { category: 'SSL_TLS', score: ssl.score, weight: WEIGHTS.SSL_TLS, status: ssl.score >= 80 ? 'pass' : ssl.score >= 50 ? 'warn' : 'fail' },
+    { category: 'DNS_EMAIL',    score: dns.score,     weight: WEIGHTS.DNS_EMAIL,    status: dns.score     >= 80 ? 'pass' : dns.score     >= 50 ? 'warn' : 'fail' },
+    { category: 'SSL_TLS',      score: ssl.score,     weight: WEIGHTS.SSL_TLS,      status: ssl.score     >= 80 ? 'pass' : ssl.score     >= 50 ? 'warn' : 'fail' },
     { category: 'HTTP_HEADERS', score: headers.score, weight: WEIGHTS.HTTP_HEADERS, status: headers.score >= 80 ? 'pass' : headers.score >= 50 ? 'warn' : 'fail' },
-    { category: 'OPEN_PORTS', score: ports.score, weight: WEIGHTS.OPEN_PORTS, status: ports.score >= 80 ? 'pass' : ports.score >= 50 ? 'warn' : 'fail' },
-    { category: 'CVE_EXPOSURE', score: cve.score, weight: WEIGHTS.CVE_EXPOSURE, status: cve.score >= 80 ? 'pass' : cve.score >= 50 ? 'warn' : 'fail' },
-    { category: 'BACKUP_HYGIENE', score: backup.score, weight: WEIGHTS.BACKUP_HYGIENE, status: backup.score >= 80 ? 'pass' : backup.score >= 50 ? 'warn' : 'fail' },
+    { category: 'OPEN_PORTS',   score: ports.score,   weight: WEIGHTS.OPEN_PORTS,   status: ports.score   >= 80 ? 'pass' : ports.score   >= 50 ? 'warn' : 'fail' },
+    { category: 'CVE_EXPOSURE', score: cve.score,     weight: WEIGHTS.CVE_EXPOSURE, status: cve.score     >= 80 ? 'pass' : cve.score     >= 50 ? 'warn' : 'fail' },
   ];
 
   const overallScore = Math.round(
@@ -103,7 +89,6 @@ export async function runFullScan(
     ...headers.findings,
     ...ports.findings,
     ...cve.findings,
-    ...backup.findings,
   ];
 
   // Add dark web findings
